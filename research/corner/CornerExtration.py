@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import cv2
+from __future__ import division      # 1/2 = 0.5
+import cv2                           # OpenCV 2
 import numpy as np
+
 import math
-from __future__ import division
 import copy
+
+import logging
 
 #===============================================================================
 # Global Variables
