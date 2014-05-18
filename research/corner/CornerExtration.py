@@ -303,38 +303,41 @@ class ImageTransformer:
 def get_sub_image(img, start_point, end_point):
     sub_image = img[start_point[1]:end_point[1] + 1, start_point[0]:end_point[0] + 1]
     return sub_image
-  
-def main():
-    global original_image, display_image
 
-    # Create a black image, a window and bind *draw_rectangle* to window
+def main():
+    # Create a black image, a window and bind *draw_rectangle* to it
     cv2.namedWindow('image')
-    cv2.setMouseCallback('image', draw_rectangle)
-   
-    # Read image  
-    original_image = cv2.imread('img/concave-polygon.png')  # original image
-    display_image = copy.deepcopy(original_image)           # image for display
-    
+    cv2.setMouseCallback('image', RectagleDrawer.draw_rectangle)
+
+    # Read image
+    GlobalVariable.original_image = cv2.imread('img/corridor.jpg')                # original image
+    GlobalVariable.original_image = cv2.resize(GlobalVariable.original_image, (0,0), fx=0.3, fy=0.3)
+    if GlobalVariable.original_image is None:
+        logging.error('Image Not Found')
+        assert 0
+    GlobalVariable.display_image  = copy.deepcopy(GlobalVariable.original_image)  # image for display
+
     # Show image
-    cv2.imshow("image", display_image)
-    
+    cv2.imshow("image", GlobalVariable.display_image)
+
     # Wait for user input, the target rectangle should be drawn before hitting carret
     key = cv2.waitKey(0)
-    
-    # if carret is hit 
+
+    # if carret is hit
     if key == ord('\r'):
         # extract target region
-        sub_image = get_sub_image(original_image, start_point, end_point)
+        sub_image = get_sub_image(GlobalVariable.original_image, GlobalVariable.start_point, GlobalVariable.end_point)
         # transform image
         transformer = ImageTransformer(sub_image)
         transformed_image = transformer.transform()
         # show result and wait
         cv2.imshow("transformed", transformed_image)
         cv2.waitKey(0)
-    
+
+
     # clean up windows
     cv2.destroyAllWindows()
-    
+
 if __name__ == '__main__':
     print 'Hello'
     main()
