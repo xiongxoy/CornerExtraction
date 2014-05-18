@@ -13,44 +13,44 @@ import logging
 #===============================================================================
 # Global Variables
 #===============================================================================
-start_point = (0, 0)
-end_point = (0, 0)
-display_imgage = []
-original_image = []
-state = 0
+class GlobalVariable:
+    start_point = (0, 0)
+    end_point = (0, 0)
+    display_image = []
+    original_image = []
+    state = 0
 
 #===============================================================================
-# Drawing Rectangle 
+# Drawing Rectangle
 #===============================================================================
 # mouse callback function
-def draw_rectangle(event, x, y, flags, param):
-    global state
-    if event == cv2.EVENT_LBUTTONDOWN:
-        if state == 0:
-            state = 1
-            start_rectangle(x, y)
-        elif state == 1:
-            state = 2
-    elif event == cv2.EVENT_MOUSEMOVE:
-        if state == 1:
-            update_rectangle(x, y)
-        if state != 2:
-            draw_rectangle_on_image()
+class RectagleDrawer:  
+    @staticmethod
+    def draw_rectangle(event, x, y, flags, param):
+        if event == cv2.EVENT_LBUTTONDOWN: 
+            if GlobalVariable.state == 0:
+                GlobalVariable.state = 1
+                RectagleDrawer.start_rectangle(x, y)
+            elif GlobalVariable.state == 1:
+                GlobalVariable.state = 2
+        elif event == cv2.EVENT_MOUSEMOVE:
+            if GlobalVariable.state == 1:
+                RectagleDrawer.update_rectangle(x, y)
+            if GlobalVariable.state != 2:
+                RectagleDrawer.draw_rectangle_on_image()
+    @staticmethod
+    def start_rectangle(x, y):
+        GlobalVariable.start_point = (x, y)
+        GlobalVariable.end_point = (x, y)
+    @staticmethod
+    def update_rectangle(x, y):
+        GlobalVariable.end_point = (x, y)
+    @staticmethod
+    def draw_rectangle_on_image():
+        GlobalVariable.display_image = copy.deepcopy(GlobalVariable.original_image)
+        cv2.rectangle(GlobalVariable.display_image, GlobalVariable.start_point, GlobalVariable.end_point, (0, 0, 255))
+        cv2.imshow("image", GlobalVariable.display_image)
 
-def start_rectangle(x, y):
-    global start_point, end_point
-    start_point = (x, y)
-    end_point = (x, y)
-
-def update_rectangle(x, y):
-    global end_point
-    end_point = (x, y)
-
-def draw_rectangle_on_image():
-    global display_image, original_image
-    display_image = copy.deepcopy(original_image)
-    cv2.rectangle(display_image, start_point, end_point, (0, 0, 255))
-    cv2.imshow("image", display_image)
 class Plotter:
     @staticmethod
     def __convert_line_format(l, s):
@@ -81,8 +81,10 @@ class Plotter:
             l = lines[i]
             l = Plotter.__convert_line_format(l, s)
             cv2.line(tmp, (l[0], l[1]), (l[2], l[3]), (255, 255, 0), 2)
-            cv2.putText(tmp, 'line %d' % i, (l[0] - 20, l[1] - 20), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 0))
+            cv2.putText(tmp, 'l%d' % i, (l[0] - 20, l[1] - 20), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 0))
         cv2.imshow('plot lines', tmp)
+        cv2.waitKey(0)
+        cv2.destroyWindow('plot lines')
     @staticmethod
     def plot_points(image, points):
         color = (255, 255, 0)
@@ -91,8 +93,14 @@ class Plotter:
         for i in xrange(len(points)):
             p = points[i]
             cv2.circle(tmp, (p[0], p[1]), 2, color)
-            # cv2.putText(image, str(i), (p[0], p[1]), cv2.FONT_HERSHEY_PLAIN, 1, color)
-            cv2.imshow('points New', tmp)
+            cv2.imshow('points', tmp)
+        cv2.waitKey(0)
+        cv2.destroyWindow('points')   
+    @staticmethod
+    def plot_image(image, title):
+        cv2.imshow(title, image)
+        cv2.waitKey(0) 
+        cv2.destroyWindow(title)
     @staticmethod
     def plot_contours(image, contours):
         tmp = copy.copy(image)
