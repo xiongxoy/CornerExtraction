@@ -2,17 +2,19 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import division      # 1/2 = 0.5
+from research.util import Plotter
 import cv2                           # OpenCV 2
 import numpy as np
 
-import math
 import copy
 
 import logging
 
-#===============================================================================
+#==============================================================================
 # Global Variables
-#===============================================================================
+#==============================================================================
+
+
 class GlobalVariable:
     start_point = (0, 0)
     end_point = (0, 0)
@@ -20,14 +22,16 @@ class GlobalVariable:
     original_image = []
     state = 0
 
-#===============================================================================
+#==============================================================================
 # Drawing Rectangle
-#===============================================================================
+#==============================================================================
+
+
 # mouse callback function
-class RectagleDrawer:  
+class RectagleDrawer:
     @staticmethod
     def draw_rectangle(event, x, y, flags, param):
-        if event == cv2.EVENT_LBUTTONDOWN: 
+        if event == cv2.EVENT_LBUTTONDOWN:
             if GlobalVariable.state == 0:
                 GlobalVariable.state = 1
                 RectagleDrawer.start_rectangle(x, y)
@@ -38,120 +42,79 @@ class RectagleDrawer:
                 RectagleDrawer.update_rectangle(x, y)
             if GlobalVariable.state != 2:
                 RectagleDrawer.draw_rectangle_on_image()
+
     @staticmethod
     def start_rectangle(x, y):
         GlobalVariable.start_point = (x, y)
         GlobalVariable.end_point = (x, y)
+
     @staticmethod
     def update_rectangle(x, y):
         GlobalVariable.end_point = (x, y)
+
     @staticmethod
     def draw_rectangle_on_image():
-        GlobalVariable.display_image = copy.deepcopy(GlobalVariable.original_image)
-        cv2.rectangle(GlobalVariable.display_image, GlobalVariable.start_point, GlobalVariable.end_point, (0, 0, 255))
+        GlobalVariable.display_image = copy.deepcopy(
+                                         GlobalVariable.original_image
+                                        )
+        cv2.rectangle(GlobalVariable.display_image,
+                      GlobalVariable.start_point,
+                      GlobalVariable.end_point, (0, 0, 255))
         cv2.imshow("image", GlobalVariable.display_image)
 
-class Plotter:
-    @staticmethod
-    def __convert_line_format(l, s):
-        '''
-        @summary: Convert line from format (vx, vy, x0, y0) to (x0, y0, x1, y1)
-        @return:  Converted line in format (x0, y0, x1, y1)
-        @param    l: input line in format (vx, vy, x0, y0)
-        @param    s: size of image
-        '''
-        h = s[0]
-        w = s[1]
-        l[0] = l[0] * 20 + l[2]
-        l[1] = l[1] * 20 + l[3]
-        if l[0] >= w or l[0] < 0 or l[1] >= h or l[0] < 0:
-            raise Exception('Extension Failed')
-        else:
-            return l
-    @staticmethod
-    def plot_lines(image, lines):
-        '''
-        @summary 本函数用于Debug时，展示提取出的直线在原图中的的位置
-        @param   image: target image
-        @param   lines: list of lines, in format (vx, vy, x0, y0)
-        '''
-        tmp = copy.deepcopy(image)
-        s = image.shape[0:2]
-        for i in xrange(len(lines)):
-            l = lines[i]
-            l = Plotter.__convert_line_format(l, s)
-            cv2.line(tmp, (l[0], l[1]), (l[2], l[3]), (255, 255, 0), 2)
-            cv2.putText(tmp, 'l%d' % i, (l[0] - 20, l[1] - 20), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 0))
-        cv2.imshow('plot lines', tmp)
-        cv2.waitKey(0)
-        cv2.destroyWindow('plot lines')
-    @staticmethod
-    def plot_points(image, points):
-        color = (255, 255, 0)
-        print points, len(points)
-        tmp = copy.copy(image)
-        for i in xrange(len(points)):
-            p = points[i]
-            cv2.circle(tmp, (p[0], p[1]), 2, color)
-            cv2.imshow('points', tmp)
-        cv2.waitKey(0)
-        cv2.destroyWindow('points')   
-    @staticmethod
-    def plot_image(image, title):
-        cv2.imshow(title, image)
-        cv2.waitKey(0) 
-        cv2.destroyWindow(title)
-    @staticmethod
-    def plot_contours(image, contours):
-        tmp = copy.copy(image)
-        cv2.drawContours(tmp, contours, 0, (0, 0, 255), 2)
-        cv2.imshow('contours', tmp)
+
 class CornerExtractor:
     def __init__(self, image):
         self.image = copy.deepcopy(image)
+
     def extract(self, n=4, convex=True):
         return  self.get_bounding_polygon_vertices(self.image)
 
     def get_bounding_polygon_vertices(self, image):
         lines = self.get_lines(image)
-        corners = self.get_vertices(self, lines)
-        return corners
-    def get_bounding_rect_vertices(self, image):
-        '''
-        single-purpose function to extract vertex  
-        @param image: image of rectangle 
-        '''
-        lines = self.get_lines(image)
-        h, w = image.shape[0:2]
-        corners = self.get_vertices(lines, w, h)
+        Plotter.plot_lines(image, lines)
+        corners = self.get_vertices(lines)
         return corners
 
-    def get_idx_from_contours_convex(self, contours):
-        # cv2.drawContours(image, contours[0], 0,(0,0,255), 2)
-        hull = cv2.convexHull(contours)
-        # cv2.drawContours(image,[hull],0,(0,0,255),2)
+    def get_idx_from_contours_convex(self, contour, n=4):
+        '''
+        @param contour: contour in points, assumed to be convex
+        @param n: number of sides
+        '''
+        assert isinstance(contour, np.ndarray)
+        # calculate direction vectors
         k = []
-        for i in range(hull.shape[0]):
-            # cv2.circle(image, tuple(hull[i][0]), 2, (255,255,0))
-            ki = hull[ (i + 1) % hull.shape[0] ] - hull[i]
-            ki = ki[0]
-            ki = ki.astype(float)
-            ki_mod = (ki[0] ** 2 + ki[1] ** 2) ** 0.5
+        for i in range(contour.shape[0]):
+            ki = contour[(i + 1) % contour.shape[0]] - contour[i]
+            ki = ki.astype(np.float32)
+            ki_mod = np.linalg.norm(ki, 2)
             ki[0] = ki[0] / ki_mod
             ki[1] = ki[1] / ki_mod
             k.append(ki)
-    
+        k = np.squeeze(np.vstack(k))
+
+        # plot for debug
+        image = np.zeros((300, 300))
+        Plotter.plot_points(image, (k * 100 + 150))
+
+        # use k-means
         termination_criteria = (cv2.TERM_CRITERIA_EPS, 30, 0.1)
-        k_array = np.float32(k)
-        centers = cv2.kmeans(k_array, 4, termination_criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
-        idx = centers[1]
-        return hull, idx
+        _, labels, _ = cv2.kmeans(k, n,
+                                  termination_criteria, 10,
+                                  cv2.KMEANS_RANDOM_CENTERS)
+        labels = list(np.squeeze(labels))
+        return labels
+
     def get_idx_from_contours_concave(self, contours):
+        '''
+        @todo: 还没有完全实现
+        @param contours:
+        '''
         cv2.drawContours(self.image, [contours], 0, (0, 0, 255), 2)
         k = []
         for i in range(contours.shape[0]):
             # cv2.circle(image, tuple(contours[i][0]), 2, (255,255,0))
-            ki = contours[ (i + 1) % contours.shape[0] ] - contours[i]
+            ki = contours[(i + 1) % contours.shape[0]] - contours[i]
             ki = ki[0]
             ki = ki.astype(float)
             ki_mod = (ki[0] ** 2 + ki[1] ** 2) ** 0.5
@@ -159,84 +122,211 @@ class CornerExtractor:
             ki[1] = ki[1] / ki_mod
             ki.append(contours[0], contours[1])
             k.append(ki)
-     
+
         termination_criteria = (cv2.TERM_CRITERIA_EPS, 30, 0.1)
         k_array = np.float32(k)
-        centers = cv2.kmeans(k_array, 4, termination_criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
+        centers = cv2.kmeans(k_array, 4,
+                             termination_criteria, 10,
+                             cv2.KMEANS_RANDOM_CENTERS)
         idx = centers[1]
         return contours, idx
 
-        # build an array of direction+position -> what are the possible better choice?
+        # build an array of direction+position ->
+        #     what are the possible better choice?
         # get the index of each point
             # cluster the array, spectral clustering is a good choice
             # find lines in the 4d space
         # smooth the result using a 1*5 median filter
         raise Exception('To be implemented')
+
+    def get_contour_from_image(self, image):
+        # detect all edges in the image
+        # convert to gray image
+        bw_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        # blur with mean value filter
+        bw_img = cv2.blur(bw_img, (3, 3))
+        # detect edges, sensitive to the parameter of canny
+        bw_img = cv2.Canny(bw_img, 50, 150)
+        Plotter.plot_image(bw_img, 'bw_img')
+
+        # find contour of the edges
+        # get contour
+        contours, _ = cv2.findContours(copy.deepcopy(bw_img),
+                                      cv2.RETR_EXTERNAL,
+                                      cv2.CHAIN_APPROX_SIMPLE)
+        # get the contour with the most points
+        contour = reduce(lambda x, y: x if len(x) > len(y) else y,
+                         contours, [])
+        Plotter.plot_image(bw_img, 'bw_img_after_contour')
+        Plotter.plot_contours(bw_img, [contour])
+        contour = np.vstack(contour).squeeze()
+        # plot contour
+        Plotter.plot_points(bw_img, contour)
+        # interpolate
+#         contour = self.interpolate_points(contour)
+        # plot contour
+        Plotter.plot_points(bw_img, contour)
+        Plotter.plot_contours(bw_img, [contour])
+        return contour
+
+    def get_lines_from_contour(self, contour):
+        # get convex contour of a contour
+        contour = np.squeeze(cv2.convexHull(contour))
+        # assign points to different lines
+        idx = self.get_idx_from_contours_convex(contour)
+        # prepare points for line fitting
+        idx = self.adjust_indexes(idx)
+        # fit points to line
+        lines = self.fit_lines_from_points(contour, idx)
+        return lines
+
     def get_lines(self, image):
         '''
         @summary: extract boundary lines of polygon from image
         @param image: input image with polygon
-        
-        @return: extracted lines 
-        '''
-        # detect all edges in the image
-        bw_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # convert to gray image
-        bw_img = cv2.blur(bw_img, (3, 3))                 # blur with mean value filter
-        bw_img = cv2.Canny(bw_img, 50, 150)               # detect edges, sensitive to the parameter of canny
-        cv2.imshow('bw_img', bw_img)                      # show result
-   
-        # find contour of the edges  
-        contours, __ = cv2.findContours(bw_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)  # get contour
-        Plotter.plot_points(bw_img, np.vstack(contours).squeeze())                           # plot contour
-        
-        # get lines from contour 
-        contours, idx = self.get_idx_from_contours_concave(contours)  # assign points to different lines
-        lines = self.fit_lines_from_points(contours, idx)             # fit points to line
 
+        @return: extracted lines
+        '''
+        contour = self.get_contour_from_image(image)
+        lines = self.get_lines_from_contour(contour)
+        Plotter.plot_lines(image, lines)
         return lines
+
+    def interpolate_points(self, contour, n=1):
+        assert isinstance(contour, np.ndarray)
+        for _ in xrange(n):
+            contour_ret = []
+            k = len(contour)
+            for i in xrange(k):
+                contour_ret.append(contour[i])
+                contour_ret.append((contour[(i + 1) % k] + contour[i]) / 2)
+            contour = contour_ret
+
+        contour_ret = np.vstack(contour_ret)
+        return contour_ret
+
+    def get_indexes_in_window(self, indexes, i, w):
+        assert isinstance(indexes, list)
+        n = len(indexes)
+        indexes_ret = []
+        if i - w >= 0 and i + w + 1 <= n:
+            return indexes[i - w:i + w + 1]
+        elif i - w >= 0 and i + w + 1 > n:
+            indexes_ret = indexes[i - w:n]
+            # remain 2*w+1-(n-i+w)
+            indexes_ret.extend(indexes[0:(2 * w + 1 - (n - i + w))])
+        elif i - w < 0 and i + w + 1 <= n:
+            indexes_ret = indexes[0:i + w + 1]
+            indexes_ret.extend(indexes[n - (w - i):n])
+        assert len(indexes_ret) == 2 * w + 1
+        return indexes_ret
+
+    def filter_indexes(self, indexes, w=1):
+        '''
+        使用类似中值滤波的技术，对轮廓进行去噪
+        @param indexes: 轮廓
+        @param w:       窗口的大小
+        '''
+        assert isinstance(indexes, list)
+        indexes_ret = []
+        n = len(indexes)
+        for i in xrange(n):
+            indexes_ret.append(
+                np.median(self.get_indexes_in_window(indexes, i, w))
+            )
+        return indexes_ret
+
+    def rename_indexes(self, indexes):
+        '''@note 怎么处理具体应用和函数之间的矛盾呢？'''
+        '''可以假设最开始的一个index是属于左上角的点么, 额额。'''
+        assert isinstance(indexes, list)
+        name_map = {}
+        c = 0
+        indexes_ret = []
+        for i in indexes:
+            if i not in name_map:
+                name_map[i] = c
+                c = c + 1
+            indexes_ret.append(name_map[i])
+        return indexes_ret
+
+    def adjust_indexes(self, indexes, w=1):
+        '''
+        对contour中的点进行整理，包括两方面：
+            1. 理想情况下，各个标号应该是连续的，因为各边应当也是连续的，对于不连续的噪声点，应当予以抛弃。
+               抛弃了之后，每条边里面的点也应当大于等于2
+            2. 为了便于后期处理，标号进行重命名，保证相邻的标号是连续变化的，即[0][0][0][1][1][1][2][2][2]...
+        @param indexes: 点的list，表示一个
+        @param idx:     每个点所属的直线index, 是一个包含整形的list
+        @param n:       插值进行的轮数
+        '''
+        assert isinstance(indexes, list)
+        # interpolate
+        # check and median filtering
+        # rename indexes
+        indexes_ret = self.filter_indexes(indexes, w)
+        indexes_ret = self.rename_indexes(indexes_ret)
+        return indexes_ret
+
     def fit_lines_from_points(self, points, idx):
         '''
         @param points: list of points
         @param idx:    index of which line each point belongs to
         '''
-        lines = []                                              # store line results
-        line_count = max(idx) + 1                               # number of lines
-        list_line_points = [ [] for i in xrange(line_count) ]   # init 2d point array
+        # store line results
+        lines = []
+        # number of lines
+        line_count = max(idx) + 1
+        # init 2d point array
+        list_line_points = [[] for i in xrange(line_count)]
         for i in xrange(len(points)):
-            list_line_points[idx[i]].append(points[i])          # put point in corresponding lines
+            # put point in corresponding lines
+            list_line_points[idx[i]].append(points[i])
         for i in xrange(line_count):
-            line = cv2.fitLine(np.array(list_line_points[i]), cv2.cv.CV_DIST_L2, 0, 0.01, 0.01)     # fit line from points
+            # fit line from points
+            line = cv2.fitLine(np.asarray(list_line_points[i],
+                                          dtype=np.float32),
+                               cv2.cv.CV_DIST_L2,
+                               0, 0.01, 0.01)
             lines.append(line)
         return lines
+
     def get_sorted_corners(self, lines, w, h):
         '''
-        @deprecated: 一般不需要对定点进行排序，如果真的有需要，请使用sort_corners 
+        @deprecated: 一般不需要对定点进行排序，如果真的有需要，请使用sort_corners
         @param lines:
         @param w:
         @param h:
         '''
-        corners = self.get_vertices(lines, w, h)
-        corners = [corners[0], corners[2], corners[3], corners[1]]
-        return corners
-    def get_vertices(self, lines, w, h):
+        raise DeprecationWarning()
+        return
+
+    def get_vertices(self, lines):
         """要求直线是首尾相接的，直接计算相邻直线的交点得到顶点"""
-        corners = []                                                                     # init point list 
+        # init point list
+        corners = []
         for i in xrange(len(lines)):
-            corner = self.get_intersection_point(lines[i], lines[(i + 1) % len(lines)])  # get intersection of lines
-            corners.append(corner)                                                       # add point to corners
-        corners = np.asarray(corners)                                                    
+            # get intersection of lines
+            corner = self.get_intersection_point(lines[i],
+                                                 lines[(i + 1) % len(lines)])
+            # add point to corners
+            corners.append(corner)
+        corners = np.asarray(corners)
         return corners
+
     def is_point_inbound(self, p, w, h):
         if (p[0] >= 0 and p[0] < w) and (p[1] >= 0 and p[1] < h):  # FIXME h,w?
             return True
         else:
             return False
+
     def sort_corners(self, corners):
         '''
-        :todo  使用Graham Scan可以完成Sort
-        :param corners: list of points to be sorted
+        @note  使用Graham Scan可以完成Sort
+        @param corners: list of points to be sorted
         '''
         raise Exception('Not Implemented')
+
     def get_intersection_point(self, l, r):
         '''
         @param l: line in format (vx, vy, x0, y0)
@@ -245,18 +335,29 @@ class CornerExtractor:
         '''
         l = l.flatten()
         r = r.flatten()
-        a = np.array([ [l[1], -l[0]]         , [r[1], -r[0]] ])
-        b = np.array([ [l[2] * l[1] - l[3] * l[0]] , [r[2] * r[1] - r[3] * r[0]] ])
+        a = np.array([[l[1], -l[0]], [r[1], -r[0]]])
+        b = np.array([[l[2] * l[1] - l[3] * l[0]],
+                      [r[2] * r[1] - r[3] * r[0]]])
         point = np.linalg.solve(a, b)
-    
+
         return point
-#===============================================================================
+#==============================================================================
 #Transforming Image
-#===============================================================================
+#==============================================================================
+
+
 class ImageTransformer:
     def __init__(self, image):
-        # get a copy of input image 
+        # get a copy of input image
         self.image = copy.deepcopy(image)
+
+    def align_points(self, points_original):
+        p, _ = min(enumerate(points_original),
+                   key=lambda x: np.linalg.norm(x[1]))
+        n = len(points_original)
+        points_original_new = [points_original[(i + p) % n] for i in xrange(n)]
+        return points_original_new
+
     def transform(self, n=4):
         '''
         @summary: 这个方法会从image中提取顶点，然后通过仿射变换将其转化为标准的大小
@@ -264,45 +365,52 @@ class ImageTransformer:
         # extract corners in image
         extractor = CornerExtractor(self.image)
         points_original = extractor.extract()
-        # get the corresponding target points 
-        points_mapped   = self.get_mapped_points()
-
+        # get the corresponding target points
+        points_mapped = self.get_mapped_points()
+        points_original = self.align_points(points_original)
+        Plotter.plot_points(self.image, points_mapped)
+        Plotter.plot_points(self.image, points_original)
         # convert storage formats of points
-        points_original = np.asarray(points_original, 'float32').reshape((4, 2))
-        points_mapped   = np.asarray(points_mapped, 'float32').reshape((4, 2))
-        # apply perspective transform
+#         points_original = np.vstack(points_original).squeeze()
+#         points_mapped = np.vstack(points_mapped).squeeze()
+        points_original = np.asarray(points_original,
+                                     'float32'
+                                    ).reshape((4, 2))
+        points_mapped = np.asarray(points_mapped,
+                                   'float32'
+                                  ).reshape((4, 2))
+        # extract and apply perspective transform
         H = cv2.getPerspectiveTransform(points_original, points_mapped)
         transformed_image = cv2.warpPerspective(self.image, H, (300, 300))
 
         return transformed_image
+
     def get_mapped_points(self, n=4):
         '''
         @summary: 给出了对应的标准点。默认为矩形，其它情况则自动生成。
                   矩形:     使用getPerspectiveTransform得到放射变换
                   超过四点:  使用findHomography得到对应的放射变换
-        @note:    由于多点对应有困难，可以考虑取其bounding rectangle，
-                  然后通过bounding rectangle的映射来做还原
+        @note:    根据具体应用的需要，由使用者设定相应的点，第一个点总是[0, 0],
+        @fix:     顺时针还是逆时针，还得结合contour的返回结果
         '''
-        if n <= 2:
+        if n <= 3:
             raise Exception("Invalid Vertex Number")
 
-        if n == 4: 
+        if n == 4:
             # set corresponding points
             w = 60
             h = 100
             corners = [[0, 0], [w, 0], [w, h], [0, h]]
         else:
-            # generate clock-wise points 
-            r = 100                     # radius
-            deg = math.pi               # initial position, i.e. start from top point
-            delta = math.pi * 2 / n      
-            corners = [ [r*math.cos(deg-i*delta), r*math.sin(deg-i*delta)] for i in xrange(n) ]
-
+            assert False, 'Target Points Not Found'
         return corners
 
+
 def get_sub_image(img, start_point, end_point):
-    sub_image = img[start_point[1]:end_point[1] + 1, start_point[0]:end_point[0] + 1]
+    sub_image = img[start_point[1]:end_point[1] + 1,
+                    start_point[0]:end_point[0] + 1]
     return sub_image
+
 
 def main():
     # Create a black image, a window and bind *draw_rectangle* to it
@@ -310,30 +418,34 @@ def main():
     cv2.setMouseCallback('image', RectagleDrawer.draw_rectangle)
 
     # Read image
-    GlobalVariable.original_image = cv2.imread('img/corridor.jpg')                # original image
-    GlobalVariable.original_image = cv2.resize(GlobalVariable.original_image, (0,0), fx=0.3, fy=0.3)
+    GlobalVariable.original_image = cv2.imread('img/corridor.jpg')
+    GlobalVariable.original_image = cv2.resize(GlobalVariable.original_image,
+                                               (0, 0), fx=0.3, fy=0.3)
     if GlobalVariable.original_image is None:
         logging.error('Image Not Found')
         assert 0
-    GlobalVariable.display_image  = copy.deepcopy(GlobalVariable.original_image)  # image for display
+    # image for display
+    GlobalVariable.display_image = copy.deepcopy(GlobalVariable.original_image)
 
     # Show image
     cv2.imshow("image", GlobalVariable.display_image)
 
-    # Wait for user input, the target rectangle should be drawn before hitting carret
+    # Wait for user input,
+    # the target rectangle should be drawn before hitting carret
     key = cv2.waitKey(0)
 
     # if carret is hit
     if key == ord('\r'):
         # extract target region
-        sub_image = get_sub_image(GlobalVariable.original_image, GlobalVariable.start_point, GlobalVariable.end_point)
+        sub_image = get_sub_image(GlobalVariable.original_image,
+                                  GlobalVariable.start_point,
+                                  GlobalVariable.end_point)
         # transform image
         transformer = ImageTransformer(sub_image)
         transformed_image = transformer.transform()
         # show result and wait
         cv2.imshow("transformed", transformed_image)
         cv2.waitKey(0)
-
 
     # clean up windows
     cv2.destroyAllWindows()
