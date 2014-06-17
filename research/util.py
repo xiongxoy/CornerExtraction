@@ -3,7 +3,7 @@
 '''
 Created on 2014-5-23
 
-@author: zx
+@author: Zhou Xiong
 '''
 import copy
 import cv2
@@ -63,7 +63,7 @@ class Plotter(object):
         for i in xrange(len(points)):
             p = points[i]
             cv2.circle(tmp, (p[0], p[1]), 2, color)
-            cv2.imshow(title, tmp)
+            cv2.imshow(title, tmp)  
         cv2.waitKey(0)
         cv2.destroyWindow(title)
 
