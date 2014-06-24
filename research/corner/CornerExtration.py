@@ -1,66 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-from __future__ import division      # 1/2 = 0.5
-from research.util import Plotter
-import cv2                           # OpenCV 2
-import numpy as np
+from __future__ import division
 
 import copy
-
 import logging
 
-#==============================================================================
-# Global Variables
-#==============================================================================
+import cv2  # OpenCV 2
+import numpy as np
 
-
-class GlobalVariable:
-    start_point = (0, 0)
-    end_point = (0, 0)
-    display_image = []
-    original_image = []
-    state = 0
-
-#==============================================================================
-# Drawing Rectangle
-#==============================================================================
-
-
-# mouse callback function
-class RectagleDrawer:
-    @staticmethod
-    def draw_rectangle(event, x, y, flags, param):
-        if event == cv2.EVENT_LBUTTONDOWN:
-            if GlobalVariable.state == 0:
-                GlobalVariable.state = 1
-                RectagleDrawer.start_rectangle(x, y)
-            elif GlobalVariable.state == 1:
-                GlobalVariable.state = 2
-        elif event == cv2.EVENT_MOUSEMOVE:
-            if GlobalVariable.state == 1:
-                RectagleDrawer.update_rectangle(x, y)
-            if GlobalVariable.state != 2:
-                RectagleDrawer.draw_rectangle_on_image()
-
-    @staticmethod
-    def start_rectangle(x, y):
-        GlobalVariable.start_point = (x, y)
-        GlobalVariable.end_point = (x, y)
-
-    @staticmethod
-    def update_rectangle(x, y):
-        GlobalVariable.end_point = (x, y)
-
-    @staticmethod
-    def draw_rectangle_on_image():
-        GlobalVariable.display_image = copy.deepcopy(
-                                         GlobalVariable.original_image
-                                        )
-        cv2.rectangle(GlobalVariable.display_image,
-                      GlobalVariable.start_point,
-                      GlobalVariable.end_point, (0, 0, 255))
-        cv2.imshow("image", GlobalVariable.display_image)
+from global_variable import GlobalVariable
+from research.corner.image_transformer import ImageTransformer
+from research.corner.rectangle_drawer import RectangleDrawer
+from research.util import Plotter
 
 
 class CornerExtractor:
@@ -341,69 +292,6 @@ class CornerExtractor:
         point = np.linalg.solve(a, b)
 
         return point
-#==============================================================================
-#Transforming Image
-#==============================================================================
-
-
-class ImageTransformer:
-    def __init__(self, image):
-        # get a copy of input image
-        self.image = copy.deepcopy(image)
-
-    def align_points(self, points_original):
-        p, _ = min(enumerate(points_original),
-                   key=lambda x: np.linalg.norm(x[1]))
-        n = len(points_original)
-        points_original_new = [points_original[(i + p) % n] for i in xrange(n)]
-        return points_original_new
-
-    def transform(self, n=4):
-        '''
-        @summary: 这个方法会从image中提取顶点，然后通过仿射变换将其转化为标准的大小
-        '''
-        # extract corners in image
-        extractor = CornerExtractor(self.image)
-        points_original = extractor.extract()
-        # get the corresponding target points
-        points_mapped = self.get_mapped_points()
-        points_original = self.align_points(points_original)
-        Plotter.plot_points(self.image, points_mapped)
-        Plotter.plot_points(self.image, points_original)
-        # convert storage formats of points
-#         points_original = np.vstack(points_original).squeeze()
-#         points_mapped = np.vstack(points_mapped).squeeze()
-        points_original = np.asarray(points_original,
-                                     'float32'
-                                    ).reshape((4, 2))
-        points_mapped = np.asarray(points_mapped,
-                                   'float32'
-                                  ).reshape((4, 2))
-        # extract and apply perspective transform
-        H = cv2.getPerspectiveTransform(points_original, points_mapped)
-        transformed_image = cv2.warpPerspective(self.image, H, (300, 300))
-
-        return transformed_image
-
-    def get_mapped_points(self, n=4):
-        '''
-        @summary: 给出了对应的标准点。默认为矩形，其它情况则自动生成。
-                  矩形:     使用getPerspectiveTransform得到放射变换
-                  超过四点:  使用findHomography得到对应的放射变换
-        @note:    根据具体应用的需要，由使用者设定相应的点，第一个点总是[0, 0],
-        @fix:     顺时针还是逆时针，还得结合contour的返回结果
-        '''
-        if n <= 3:
-            raise Exception("Invalid Vertex Number")
-
-        if n == 4:
-            # set corresponding points
-            w = 60
-            h = 100
-            corners = [[0, 0], [w, 0], [w, h], [0, h]]
-        else:
-            assert False, 'Target Points Not Found'
-        return corners
 
 
 def get_sub_image(img, start_point, end_point):
@@ -415,7 +303,7 @@ def get_sub_image(img, start_point, end_point):
 def main():
     # Create a black image, a window and bind *draw_rectangle* to it
     cv2.namedWindow('image')
-    cv2.setMouseCallback('image', RectagleDrawer.draw_rectangle)
+    cv2.setMouseCallback('image', RectangleDrawer.draw_rectangle)
 
     # Read image
     GlobalVariable.original_image = cv2.imread('img/corridor.jpg')
