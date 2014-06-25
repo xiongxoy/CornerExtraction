@@ -1,8 +1,11 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import copy
 
 import cv2
 
-from global_variable import GlobalVariable
+from .global_variable import GlobalVariable
 
 
 # mouse callback function

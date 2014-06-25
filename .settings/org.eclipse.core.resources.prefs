@@ -1,4 +1,7 @@
 eclipse.preferences.version=1
-encoding//research/corner/CornerExtration.py=utf-8
+encoding//research/corner/corner_extraction.py=utf-8
+encoding//research/corner/global_variable.py=utf-8
+encoding//research/corner/image_transformer.py=utf-8
+encoding//research/corner/rectangle_drawer.py=utf-8
 encoding//research/util.py=utf-8
 encoding/TestCornerExtraction.py=utf-8

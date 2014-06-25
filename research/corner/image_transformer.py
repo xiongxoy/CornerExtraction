@@ -1,10 +1,10 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import copy
 
 import cv2
 import numpy as np
-
-from research.corner.CornerExtration import CornerExtractor
-from research.util import Plotter
 
 
 class ImageTransformer:
@@ -23,6 +23,9 @@ class ImageTransformer:
         '''
         @summary: 这个方法会从image中提取顶点，然后通过仿射变换将其转化为标准的大小
         '''
+        from research.corner.corner_extraction import CornerExtractor
+        from research.util import Plotter
+
         # extract corners in image
         extractor = CornerExtractor(self.image)
         points_original = extractor.extract()

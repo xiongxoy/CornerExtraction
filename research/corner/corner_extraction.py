@@ -8,10 +8,7 @@ import logging
 import cv2  # OpenCV 2
 import numpy as np
 
-from global_variable import GlobalVariable
-from research.corner.image_transformer import ImageTransformer
-from research.corner.rectangle_drawer import RectangleDrawer
-from research.util import Plotter
+from research.corner.global_variable import GlobalVariable
 
 
 class CornerExtractor:
@@ -22,6 +19,8 @@ class CornerExtractor:
         return  self.get_bounding_polygon_vertices(self.image)
 
     def get_bounding_polygon_vertices(self, image):
+        from research.util import Plotter
+
         lines = self.get_lines(image)
         Plotter.plot_lines(image, lines)
         corners = self.get_vertices(lines)
@@ -32,6 +31,8 @@ class CornerExtractor:
         @param contour: contour in points, assumed to be convex
         @param n: number of sides
         '''
+        from research.util import Plotter
+
         assert isinstance(contour, np.ndarray)
         # calculate direction vectors
         k = []
@@ -91,6 +92,8 @@ class CornerExtractor:
         raise Exception('To be implemented')
 
     def get_contour_from_image(self, image):
+        from research.util import Plotter
+
         # detect all edges in the image
         # convert to gray image
         bw_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -138,6 +141,8 @@ class CornerExtractor:
 
         @return: extracted lines
         '''
+        from research.util import Plotter
+
         contour = self.get_contour_from_image(image)
         lines = self.get_lines_from_contour(contour)
         Plotter.plot_lines(image, lines)
@@ -301,12 +306,17 @@ def get_sub_image(img, start_point, end_point):
 
 
 def main():
+    from research.corner.image_transformer import ImageTransformer
+    from research.corner.rectangle_drawer import RectangleDrawer
+
     # Create a black image, a window and bind *draw_rectangle* to it
     cv2.namedWindow('image')
     cv2.setMouseCallback('image', RectangleDrawer.draw_rectangle)
 
     # Read image
     GlobalVariable.original_image = cv2.imread('img/corridor.jpg')
+    if GlobalVariable.original_image is None:
+        assert False
     GlobalVariable.original_image = cv2.resize(GlobalVariable.original_image,
                                                (0, 0), fx=0.3, fy=0.3)
     if GlobalVariable.original_image is None:

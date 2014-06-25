@@ -10,7 +10,7 @@ Created on 2014-4-29
 import unittest
 import numpy as np
 
-from research.corner.CornerExtration import CornerExtractor
+from research.corner.corner_extraction import CornerExtractor
 
 
 class Test(unittest.TestCase):
