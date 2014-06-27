@@ -107,20 +107,22 @@ class CornerExtractor:
         # get contour
         contours, _ = cv2.findContours(copy.deepcopy(bw_img),
                                       cv2.RETR_EXTERNAL,
-                                      cv2.CHAIN_APPROX_SIMPLE)
+                                      cv2.CHAIN_APPROX_TC89_L1)
+#                                       cv2.CHAIN_APPROX_SIMPLE)
         # get the contour with the most points
         contour = reduce(lambda x, y: x if len(x) > len(y) else y,
                          contours, [])
         Plotter.plot_image(bw_img, 'bw_img_after_contour')
-        Plotter.plot_contours(bw_img, [contour])
+        Plotter.plot_contours(bw_img, [contour], 'extracted contour')
         contour = np.vstack(contour).squeeze()
         # plot contour
-        Plotter.plot_points(bw_img, contour)
+        Plotter.plot_points(bw_img, contour,
+                            'the points of contour after squeezing')
         # interpolate
 #         contour = self.interpolate_points(contour)
         # plot contour
-        Plotter.plot_points(bw_img, contour)
-        Plotter.plot_contours(bw_img, [contour])
+#         Plotter.plot_points(bw_img, contour)
+        Plotter.plot_contours(bw_img, [contour], 'contour after squeezing')
         return contour
 
     def get_lines_from_contour(self, contour):
@@ -316,22 +318,17 @@ def main():
     # Read image
     GlobalVariable.original_image = cv2.imread('img/corridor.jpg')
     if GlobalVariable.original_image is None:
-        assert False
-    GlobalVariable.original_image = cv2.resize(GlobalVariable.original_image,
-                                               (0, 0), fx=0.3, fy=0.3)
-    if GlobalVariable.original_image is None:
         logging.error('Image Not Found')
         assert 0
+    GlobalVariable.original_image = cv2.resize(GlobalVariable.original_image,
+                                               (0, 0), fx=0.3, fy=0.3)
     # image for display
     GlobalVariable.display_image = copy.deepcopy(GlobalVariable.original_image)
-
     # Show image
     cv2.imshow("image", GlobalVariable.display_image)
-
     # Wait for user input,
     # the target rectangle should be drawn before hitting carret
     key = cv2.waitKey(0)
-
     # if carret is hit
     if key == ord('\r'):
         # extract target region
@@ -350,4 +347,5 @@ def main():
 
 if __name__ == '__main__':
     print 'Hello'
+    logging.error("Good Start")
     main()
