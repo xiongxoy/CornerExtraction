@@ -11,157 +11,30 @@ import numpy as np
 from research.corner.global_variable import GlobalVariable
 
 
-class CornerExtractor:
-    def __init__(self, image):
-        self.image = copy.deepcopy(image)
+class ContourAnalyser(object):
 
-    def extract(self, n=4, convex=True):
-        return  self.get_bounding_polygon_vertices(self.image)
-
-    def get_bounding_polygon_vertices(self, image):
-        from research.util import Plotter
-
-        lines = self.get_lines(image)
-        Plotter.plot_lines(image, lines)
-        corners = self.get_vertices(lines)
-        return corners
-
-    def get_idx_from_contours_convex(self, contour, n=4):
+    def fit_lines_from_points(self, points, idx):
         '''
-        @param contour: contour in points, assumed to be convex
-        @param n: number of sides
+        @param points: list of points
+        @param idx:    index of which line each point belongs to
         '''
-        from research.util import Plotter
-
-        assert isinstance(contour, np.ndarray)
-        # calculate direction vectors
-        k = []
-        for i in range(contour.shape[0]):
-            ki = contour[(i + 1) % contour.shape[0]] - contour[i]
-            ki = ki.astype(np.float32)
-            ki_mod = np.linalg.norm(ki, 2)
-            ki[0] = ki[0] / ki_mod
-            ki[1] = ki[1] / ki_mod
-            k.append(ki)
-        k = np.squeeze(np.vstack(k))
-
-        # plot for debug
-        image = np.zeros((300, 300))
-        Plotter.plot_points(image, (k * 100 + 150))
-
-        # use k-means
-        termination_criteria = (cv2.TERM_CRITERIA_EPS, 30, 0.1)
-        _, labels, _ = cv2.kmeans(k, n,
-                                  termination_criteria, 10,
-                                  cv2.KMEANS_RANDOM_CENTERS)
-        labels = list(np.squeeze(labels))
-        return labels
-
-    def get_idx_from_contours_concave(self, contours):
-        '''
-        @todo: 还没有完全实现
-        @param contours:
-        '''
-        cv2.drawContours(self.image, [contours], 0, (0, 0, 255), 2)
-        k = []
-        for i in range(contours.shape[0]):
-            # cv2.circle(image, tuple(contours[i][0]), 2, (255,255,0))
-            ki = contours[(i + 1) % contours.shape[0]] - contours[i]
-            ki = ki[0]
-            ki = ki.astype(float)
-            ki_mod = (ki[0] ** 2 + ki[1] ** 2) ** 0.5
-            ki[0] = ki[0] / ki_mod
-            ki[1] = ki[1] / ki_mod
-            ki.append(contours[0], contours[1])
-            k.append(ki)
-
-        termination_criteria = (cv2.TERM_CRITERIA_EPS, 30, 0.1)
-        k_array = np.float32(k)
-        centers = cv2.kmeans(k_array, 4,
-                             termination_criteria, 10,
-                             cv2.KMEANS_RANDOM_CENTERS)
-        idx = centers[1]
-        return contours, idx
-
-        # build an array of direction+position ->
-        #     what are the possible better choice?
-        # get the index of each point
-            # cluster the array, spectral clustering is a good choice
-            # find lines in the 4d space
-        # smooth the result using a 1*5 median filter
-        raise Exception('To be implemented')
-
-    def get_contour_from_image(self, image):
-        from research.util import Plotter
-
-        # detect all edges in the image
-        # convert to gray image
-        bw_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        # blur with mean value filter
-        bw_img = cv2.blur(bw_img, (3, 3))
-        # detect edges, sensitive to the parameter of canny
-        bw_img = cv2.Canny(bw_img, 50, 150)
-        Plotter.plot_image(bw_img, 'bw_img')
-
-        # find contour of the edges
-        # get contour
-        contours, _ = cv2.findContours(copy.deepcopy(bw_img),
-                                      cv2.RETR_EXTERNAL,
-                                      cv2.CHAIN_APPROX_TC89_L1)
-#                                       cv2.CHAIN_APPROX_SIMPLE)
-        # get the contour with the most points
-        contour = reduce(lambda x, y: x if len(x) > len(y) else y,
-                         contours, [])
-        Plotter.plot_image(bw_img, 'bw_img_after_contour')
-        Plotter.plot_contours(bw_img, [contour], 'extracted contour')
-        contour = np.vstack(contour).squeeze()
-        # plot contour
-        Plotter.plot_points(bw_img, contour,
-                            'the points of contour after squeezing')
-        # interpolate
-#         contour = self.interpolate_points(contour)
-        # plot contour
-#         Plotter.plot_points(bw_img, contour)
-        Plotter.plot_contours(bw_img, [contour], 'contour after squeezing')
-        return contour
-
-    def get_lines_from_contour(self, contour):
-        # get convex contour of a contour
-        contour = np.squeeze(cv2.convexHull(contour))
-        # assign points to different lines
-        idx = self.get_idx_from_contours_convex(contour)
-        # prepare points for line fitting
-        idx = self.adjust_indexes(idx)
-        # fit points to line
-        lines = self.fit_lines_from_points(contour, idx)
+        # store line results
+        lines = []
+        # number of lines
+        line_count = max(idx) + 1
+        # init 2d point array
+        list_line_points = [[] for i in xrange(line_count)]
+        for i in xrange(len(points)):
+            # put point in corresponding lines
+            list_line_points[idx[i]].append(points[i])
+        for i in xrange(line_count):
+            # fit line from points
+            line = cv2.fitLine(np.asarray(list_line_points[i],
+                                          dtype=np.float32),
+                               cv2.cv.CV_DIST_L2,
+                               0, 0.01, 0.01)
+            lines.append(line)
         return lines
-
-    def get_lines(self, image):
-        '''
-        @summary: extract boundary lines of polygon from image
-        @param image: input image with polygon
-
-        @return: extracted lines
-        '''
-        from research.util import Plotter
-
-        contour = self.get_contour_from_image(image)
-        lines = self.get_lines_from_contour(contour)
-        Plotter.plot_lines(image, lines)
-        return lines
-
-    def interpolate_points(self, contour, n=1):
-        assert isinstance(contour, np.ndarray)
-        for _ in xrange(n):
-            contour_ret = []
-            k = len(contour)
-            for i in xrange(k):
-                contour_ret.append(contour[i])
-                contour_ret.append((contour[(i + 1) % k] + contour[i]) / 2)
-            contour = contour_ret
-
-        contour_ret = np.vstack(contour_ret)
-        return contour_ret
 
     def get_indexes_in_window(self, indexes, i, w):
         assert isinstance(indexes, list)
@@ -226,38 +99,166 @@ class CornerExtractor:
         indexes_ret = self.rename_indexes(indexes_ret)
         return indexes_ret
 
-    def fit_lines_from_points(self, points, idx):
-        '''
-        @param points: list of points
-        @param idx:    index of which line each point belongs to
-        '''
-        # store line results
-        lines = []
-        # number of lines
-        line_count = max(idx) + 1
-        # init 2d point array
-        list_line_points = [[] for i in xrange(line_count)]
-        for i in xrange(len(points)):
-            # put point in corresponding lines
-            list_line_points[idx[i]].append(points[i])
-        for i in xrange(line_count):
-            # fit line from points
-            line = cv2.fitLine(np.asarray(list_line_points[i],
-                                          dtype=np.float32),
-                               cv2.cv.CV_DIST_L2,
-                               0, 0.01, 0.01)
-            lines.append(line)
+
+class ContourAnalyserRANSAC(object):
+    pass
+
+
+class ContourAnalyserClustering(ContourAnalyser):
+
+    def extract_lines(self, contour):
+        """extract lines from contour"""
+        # get convex contour of a contour
+        contour = np.squeeze(cv2.convexHull(contour))
+        # assign points to different lines
+        idx = self.get_idx_from_contours_kmeans(contour)
+        # prepare points for line fitting
+        idx = self.adjust_indexes(idx)
+        # fit points to line
+        lines = self.fit_lines_from_points(contour, idx)
         return lines
 
-    def get_sorted_corners(self, lines, w, h):
+    def get_idx_from_contours_kmeans(self, contour, n=4):
         '''
-        @deprecated: 一般不需要对定点进行排序，如果真的有需要，请使用sort_corners
-        @param lines:
-        @param w:
-        @param h:
+        @param contour: contour in points, assumed to be convex
+        @param n: number of sides
         '''
-        raise DeprecationWarning()
-        return
+        from research.util import Plotter
+
+        assert isinstance(contour, np.ndarray)
+        # calculate direction vectors
+        k = []
+        for i in range(contour.shape[0]):
+            ki = contour[(i + 1) % contour.shape[0]] - contour[i]
+            ki = ki.astype(np.float32)
+            ki_mod = np.linalg.norm(ki, 2)
+            ki[0] = ki[0] / ki_mod
+            ki[1] = ki[1] / ki_mod
+            k.append(ki)
+        k = np.squeeze(np.vstack(k))
+
+        # plot for debug
+        image = np.zeros((300, 300))
+        Plotter.plot_points(image, (k * 100 + 150))
+
+        # use k-means
+        termination_criteria = (cv2.TERM_CRITERIA_EPS, 30, 0.1)
+        _, labels, _ = cv2.kmeans(k, n,
+                                  termination_criteria, 10,
+                                  cv2.KMEANS_RANDOM_CENTERS)
+        labels = list(np.squeeze(labels))
+        return labels
+
+    def get_idx_from_contours_spectral_clustering(self, contours):
+        '''
+        @todo: 还没有完全实现
+        @param contours:
+        '''
+        cv2.drawContours(self.image, [contours], 0, (0, 0, 255), 2)
+        k = []
+        for i in range(contours.shape[0]):
+            # cv2.circle(image, tuple(contours[i][0]), 2, (255,255,0))
+            ki = contours[(i + 1) % contours.shape[0]] - contours[i]
+            ki = ki[0]
+            ki = ki.astype(float)
+            ki_mod = (ki[0] ** 2 + ki[1] ** 2) ** 0.5
+            ki[0] = ki[0] / ki_mod
+            ki[1] = ki[1] / ki_mod
+            ki.append(contours[0], contours[1])
+            k.append(ki)
+
+        termination_criteria = (cv2.TERM_CRITERIA_EPS, 30, 0.1)
+        k_array = np.float32(k)
+        centers = cv2.kmeans(k_array, 4,
+                             termination_criteria, 10,
+                             cv2.KMEANS_RANDOM_CENTERS)
+        idx = centers[1]
+        return contours, idx
+
+        # build an array of direction+position ->
+        #     what are the possible better choice?
+        # get the index of each point
+            # cluster the array, spectral clustering is a good choice
+            # find lines in the 4d space
+        # smooth the result using a 1*5 median filter
+        raise Exception('To be implemented')
+
+
+class CornerExtractor(object):
+    def __init__(self, image):
+        self.image = copy.deepcopy(image)
+
+    def extract(self, n=4, convex=True):
+        return  self.get_bounding_polygon_vertices(self.image)
+
+    def get_bounding_polygon_vertices(self, image):
+        from research.util import Plotter
+
+        lines = self.get_lines(image)
+        Plotter.plot_lines(image, lines)
+        corners = self.get_vertices(lines)
+        return corners
+
+    def get_contour_from_image(self, image):
+        from research.util import Plotter
+
+        # detect all edges in the image
+        # convert to gray image
+        bw_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        # blur with mean value filter
+        bw_img = cv2.blur(bw_img, (3, 3))
+        # detect edges, sensitive to the parameter of canny
+        bw_img = cv2.Canny(bw_img, 50, 150)
+        Plotter.plot_image(bw_img, 'bw_img')
+        # find contour of the edges
+        # get contour
+        contours, _ = cv2.findContours(copy.deepcopy(bw_img),
+                                      cv2.RETR_EXTERNAL,
+                                      cv2.CHAIN_APPROX_TC89_L1)
+#                                       cv2.CHAIN_APPROX_SIMPLE)
+        # get the contour with the most points
+        contour = reduce(lambda x, y: x if len(x) > len(y) else y,
+                         contours, [])
+        Plotter.plot_image(bw_img, 'bw_img_after_contour')
+        Plotter.plot_contours(bw_img, [contour], 'extracted contour')
+        contour = np.vstack(contour).squeeze()
+        # plot contour
+        Plotter.plot_points(bw_img, contour,
+                            'the points of contour after squeezing')
+        # interpolate
+#         contour = self.interpolate_points(contour)
+        # plot contour
+#         Plotter.plot_points(bw_img, contour)
+        Plotter.plot_contours(bw_img, [contour], 'contour after squeezing')
+        return contour
+
+    def get_lines(self, image):
+        '''
+        @summary: extract boundary lines of polygon from image
+        @param image: input image with polygon
+
+        @return: extracted lines
+        '''
+        from research.util import Plotter
+
+        contour = self.get_contour_from_image(image)
+        analyser = ContourAnalyserClustering()
+        lines = analyser.extract_lines(contour)
+        Plotter.plot_lines(image, lines)
+        return lines
+
+    def interpolate_points(self, contour, n=1):
+        assert isinstance(contour, np.ndarray)
+        for _ in xrange(n):
+            contour_ret = []
+            k = len(contour)
+            for i in xrange(k):
+                contour_ret.append(contour[i])
+                contour_ret.append((contour[(i + 1) % k] + contour[i]) / 2)
+            contour = contour_ret
+
+        contour_ret = np.vstack(contour_ret)
+        return contour_ret
 
     def get_vertices(self, lines):
         """要求直线是首尾相接的，直接计算相邻直线的交点得到顶点"""
@@ -280,7 +281,7 @@ class CornerExtractor:
 
     def sort_corners(self, corners):
         '''
-        @note  使用Graham Scan可以完成Sort
+        @note  使用Graham Scan可以完成Sort, 从最低点开始扫描，测量点和矫正点可以一一对应
         @param corners: list of points to be sorted
         '''
         raise Exception('Not Implemented')

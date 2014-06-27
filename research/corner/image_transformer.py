@@ -35,8 +35,8 @@ class ImageTransformer:
         Plotter.plot_points(self.image, points_mapped)
         Plotter.plot_points(self.image, points_original)
         # convert storage formats of points
-#         points_original = np.vstack(points_original).squeeze()
-#         points_mapped = np.vstack(points_mapped).squeeze()
+#       points_original = np.vstack(points_original).squeeze()
+#       points_mapped = np.vstack(points_mapped).squeeze()
         points_original = np.asarray(points_original,
                                      'float32'
                                     ).reshape((4, 2))
