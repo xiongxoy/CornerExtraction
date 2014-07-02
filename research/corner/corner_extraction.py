@@ -9,6 +9,7 @@ import cv2  # OpenCV 2
 import numpy as np
 
 from research.corner.global_variable import GlobalVariable
+from research.util import get_elements_in_window, distance_from_point_to_line
 
 
 class ContourAnalyser(object):
@@ -100,8 +101,111 @@ class ContourAnalyser(object):
         return indexes_ret
 
 
-class ContourAnalyserRANSAC(object):
-    pass
+class ContourAnalyserRANSAC(ContourAnalyser):
+
+    def remove_unused_points(self, contour, idx):
+        list_of_remove = []
+        for k, v in enumerate(idx):
+            if v == -1:
+                list_of_remove.append(k)
+        for i in list_of_remove:
+            del contour[i]
+            del idx[i]
+        return contour, idx
+
+    def extract_lines(self, contour):
+        """extract lines from contour"""
+        # assign points to different lines
+        idx = self.get_idx_from_contours_ransac(contour)
+        # prepare points for line fitting
+        contour, idx = self.remove_unused_points(contour, idx)
+#         idx = self.adjust_indexes(idx)
+        idx = self.rename_indexes(idx)
+        # fit points to line
+        lines = self.fit_lines_from_points(contour, idx)
+        return lines
+
+    def compute_inliner_rate(self, inliner_idx):
+        n = len(inliner_idx)
+        inliner = 0
+        for i in inliner_idx:
+            inliner_idx = inliner_idx + 1 if i != -1 else inliner_idx
+        return inliner / n
+
+    # TODO: determine N
+    # TODO: determine d
+    def get_idx_from_contours_ransac(self, contour):
+        # N = log(1-p)/log(1-(1-e)^s)
+        N = 100
+        # d = \sqrt {3.84 * \sigma ^ 2}
+        d = 2.5
+
+        best_idx = []
+        best_rate = -1
+        for _ in xrange(N):
+            inliner_idx = self.one_pass_ransac(contour, d)
+            inliner_rate = self.compute_inliner_rate(inliner_idx)
+            if inliner_rate > best_rate:
+                best_rate = inliner_rate
+                best_idx = inliner_idx
+        return best_idx
+
+    def one_pass_ransac(self, contour, d, k=4):
+        n = len(contour)  # points left
+        inliner_idx = [-1 for _ in xrange(n)]  # -1 means not included yet
+        for _ in xrange(k):
+            p = np.random.randint(n)  # choose one as the central point
+            inliner_idx = self.delete_one_edge(contour, inliner_idx, p)
+        return inliner_idx
+
+    # TODO: implement delete one edge
+    # TODO: Add Test
+    def set_index_by_step(self, contour, inliner_idx, idx,
+                          step, p, n, a, delta):
+        length = len(contour)
+        while True:
+            q = p % length
+            if distance_from_point_to_line(n, a, contour[q]) < delta:
+                if inliner_idx == -1:
+                    inliner_idx[q] = idx
+                else:  # remove index in common region
+                    inliner_idx[q] = -1
+            else:
+                break
+            p = p + step
+
+    # Add Test
+    def delete_adjacent_inliner(self, contour, inliner_idx, p, n, a, delta=2):
+        idx = max(inliner_idx) + 1
+        # delete forward
+        self.set_index_by_step(contour, inliner_idx, idx,
+                               1, p, n, a, delta)
+        # delete backward
+        self.set_index_by_step(contour, inliner_idx, idx,
+                               -1, p - 1, n, a, delta)
+
+    # Add Test
+    def delete_one_edge(self, contour, inliner_idx, p):
+        counter = 0
+        center = -1
+        for k, v in enumerate(inliner_idx):
+            counter = counter + 1 if v == -1 else counter
+            if counter == p:
+                center = k
+                break
+        # TODO: determine Region of Support (ROS)
+        points = get_elements_in_window(counter, center, 2)
+        # get line in for mat (vx, vy, x0, y0)
+        line = cv2.fitLine(np.asarray(points,
+                                      dtype=np.float32),
+                                      cv2.cv.CV_DIST_L2,
+                                      0, 0.01, 0.01)
+        vx = line[0]
+        vy = line[1]
+        n = np.asarray([vx, vy])
+        n = n / np.linalg.norm(n)
+        a = np.asarray([line[2], line[3]])
+        self.delete_adjacent_inliner(counter, inliner_idx, p, n, a)
 
 
 class ContourAnalyserClustering(ContourAnalyser):
