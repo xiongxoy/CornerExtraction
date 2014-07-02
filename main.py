@@ -50,6 +50,8 @@ def perspectvie_trans_demo():
     cv2.destroyAllWindows()
 
 
+def ransac_corner_extraction_demo():
+    img = cv2.imread('img/flag.jpg')
 
 
 if __name__ == '__main__':
