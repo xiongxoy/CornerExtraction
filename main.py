@@ -52,10 +52,12 @@ def perspectvie_trans_demo():
 
 def ransac_corner_extraction_demo():
     img = cv2.imread('img/flag.jpg')
-
+    GlobalVariable.original_image = img
+    extractor = CornerExtractor(img)
+    extractor.extract(7, False)
 
 if __name__ == '__main__':
     print 'Hello'
     logging.error("Good Start")
-    perspectvie_trans_demo()
+    # perspectvie_trans_demo()
     ransac_corner_extraction_demo()
