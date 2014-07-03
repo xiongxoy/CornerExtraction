@@ -59,11 +59,13 @@ def line_noisy(x0, y0, x1, y1):
 # TODO: Add Test
 # http://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
 def distance_from_point_to_line(n, a, point):
+    n = n / np.linalg.norm(n)
     dist_vec = (a - point) - ((a - point) * n) * n
     return np.linalg.norm(dist_vec)
 
 
 def get_elements_in_window(li, i, w):
+    li = list(li)
     assert isinstance(li, list)
     n = len(li)
     elements_ret = []
@@ -78,6 +80,20 @@ def get_elements_in_window(li, i, w):
         elements_ret.extend(li[n - (w - i):n])
     assert len(elements_ret) == 2 * w + 1
     return elements_ret
+
+
+def interpolate_points(contour, n=1):
+    assert isinstance(contour, np.ndarray)
+    for _ in xrange(n):
+        contour_ret = []
+        k = len(contour)
+        for i in xrange(k):
+            contour_ret.append(contour[i])
+            contour_ret.append((contour[(i + 1) % k] + contour[i]) / 2)
+        contour = contour_ret
+
+    contour_ret = np.vstack(contour_ret)
+    return contour_ret
 
 
 class Plotter(object):
@@ -115,8 +131,8 @@ class Plotter(object):
             l = lines[i]
             l = Plotter.__convert_line_format(l, s)
             cv2.line(tmp, (l[0], l[1]), (l[2], l[3]), (255, 255, 0), 2)
-            cv2.putText(tmp, 'l%d' % i, (l[0] - 20, l[1] - 20),
-                        cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 0))
+            cv2.putText(tmp, 'L%d' % i, (l[0] - 20, l[1] - 20),
+                        cv2.FONT_HERSHEY_PLAIN, 1, (255, 0, 0))
         cv2.imshow(title, tmp)
         cv2.waitKey(0)
         cv2.destroyWindow(title)
