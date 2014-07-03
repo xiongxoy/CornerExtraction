@@ -116,14 +116,15 @@ class ContourAnalyzerRANSAC(ContourAnalyzer):
         contour = np.delete(contour, list_of_remove, 0)
         return contour, idx_new
 
-    def extract_lines(self, contour):
+    def extract_lines(self, contour, k):
         """extract lines from contour"""
         # interpolate points
         contour = interpolate_points(contour, 2)
         Plotter.plot_points(GlobalVariable.original_image, contour,
                             'points after interpolate')
         # assign points to different lines
-        idx = self.get_idx_from_contours_ransac(contour)
+        idx = self.get_idx_from_contours_ransac(contour, k)
+        print idx
         # prepare points for line fitting
         contour, idx = self.remove_unused_points(contour, idx)
 #       idx = self.adjust_indexes(idx)
@@ -141,7 +142,7 @@ class ContourAnalyzerRANSAC(ContourAnalyzer):
 
     # TODO: determine N
     # TODO: determine d
-    def get_idx_from_contours_ransac(self, contour):
+    def get_idx_from_contours_ransac(self, contour, k):
         # N = log(1-p)/log(1-(1-e)^s)
         N = 100
         # d = \sqrt {3.84 * \sigma ^ 2}
@@ -150,7 +151,7 @@ class ContourAnalyzerRANSAC(ContourAnalyzer):
         best_idx = []
         best_rate = -1
         for _ in xrange(N):
-            inliner_idx = self.one_pass_ransac(contour, d)
+            inliner_idx = self.one_pass_ransac(contour, d, k)
             inliner_rate = self.compute_inliner_rate(inliner_idx)
             if inliner_rate > best_rate:
                 best_rate = inliner_rate
