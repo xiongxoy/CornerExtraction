@@ -3,7 +3,6 @@
 from __future__ import division
 
 import copy
-import logging
 
 import cv2  # OpenCV 2
 import numpy as np
@@ -119,9 +118,9 @@ class ContourAnalyzerRANSAC(ContourAnalyzer):
     def extract_lines(self, contour, k):
         """extract lines from contour"""
         # interpolate points
-        contour = interpolate_points(contour, 2)
-        Plotter.plot_points(GlobalVariable.original_image, contour,
-                            'points after interpolate')
+#         contour = interpolate_points(contour, 2)
+#         Plotter.plot_points(GlobalVariable.original_image, contour,
+#                             'points after interpolate')
         # assign points to different lines
         idx = self.get_idx_from_contours_ransac(contour, k)
         print idx
@@ -163,7 +162,8 @@ class ContourAnalyzerRANSAC(ContourAnalyzer):
         inliner_idx = [-1 for _ in xrange(n)]  # -1 means not included yet
         for _ in xrange(k):
             p = np.random.randint(n)  # choose one as the central point
-            inliner_idx = self.delete_one_edge(contour, inliner_idx, p)
+            inliner_idx = self.delete_one_edge(contour, inliner_idx, d, p)
+            n = len(filter(lambda x: x == -1, inliner_idx))
         return inliner_idx
 
     # TODO: implement delete one edge
@@ -173,7 +173,8 @@ class ContourAnalyzerRANSAC(ContourAnalyzer):
         length = len(contour)
         while True:
             q = p % length
-            if distance_from_point_to_line(n, a, contour[q]) < delta:
+            d = distance_from_point_to_line(n, a, contour[q])
+            if d < delta:
                 if inliner_idx[q] == -1:
                     inliner_idx[q] = idx
                 else:  # remove index in common region
@@ -190,11 +191,12 @@ class ContourAnalyzerRANSAC(ContourAnalyzer):
                                1, p, n, a, delta)
         # delete backward
         self.set_index_by_step(contour, inliner_idx, idx,
-                               -1, p - 1, n, a, delta)
+                               -1, p-1, n, a, delta)
         return inliner_idx
 
     # Add Test
-    def delete_one_edge(self, contour, inliner_idx, p):
+    def delete_one_edge(self, contour, inliner_idx, d, p):
+        assert isinstance(contour, np.ndarray)
         counter = 0
         center = -1
         for k, v in enumerate(inliner_idx):
@@ -209,14 +211,14 @@ class ContourAnalyzerRANSAC(ContourAnalyzer):
                                       dtype=np.float32),
                                       cv2.cv.CV_DIST_L2,
                                       0, 0.01, 0.01)
-    #    Plotter.plot_lines(GlobalVariable.original_image,
-    #                       [line], 'show fitted line')
+     
         vx = line[0]
         vy = line[1]
         n = np.asarray([vx, vy])
-        n = n / np.linalg.norm(n)
+        n = np.squeeze(n)
         a = np.asarray([line[2], line[3]])
-        self.set_adjacent_inliner(contour, inliner_idx, center, n, a)
+        a = np.squeeze(a)
+        self.set_adjacent_inliner(contour, inliner_idx, center, n, a, d)
         return inliner_idx
 
 
