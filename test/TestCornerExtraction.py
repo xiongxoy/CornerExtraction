@@ -27,8 +27,6 @@ class Test(unittest.TestCase):
         contour = np.vstack(contour).squeeze()
         # assign points to different lines
         idx = self.extractor.get_idx_from_contours_convex(contour, 4)
-#       self.assertEqual(contour, contour)
-        print idx
         self.assertEqual(max(idx) + 1, 4)
         self.assertTrue(idx[0] == idx[1] and idx[1] == idx[2])
         self.assertTrue(idx[3] == idx[4] and idx[4] == idx[5])
@@ -94,7 +92,7 @@ class Test(unittest.TestCase):
 
     def test_filtering_indexes_case1(self):
         indexes = [0, 0, 3, 0, 0, 1, 1, 1, 2, 2, 2, 2]
-        ret_indexes = self.extractor.filter_indexes(indexes,  1)
+        ret_indexes = self.extractor.filter_indexes(indexes, 1)
         expected_indexes = [0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 2]
         self.assertTrue(
              np.testing.assert_allclose(ret_indexes,  expected_indexes) is None
