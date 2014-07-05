@@ -1,5 +1,5 @@
 '''
-# TODO
+# TODO:
 1 Figure out the effect of various methods for extracting contours
 2 Test book image, Fitzgerald
 3 implement RANSAC based corner extraction
