@@ -8,7 +8,7 @@ import cv2  # OpenCV 2
 import numpy as np
 
 from research.util import get_elements_in_window, distance_from_point_to_line,\
-    interpolate_points, Plotter
+    interpolate_points, Plotter, info
 from research.corner.global_variable import GlobalVariable
 
 
@@ -118,12 +118,12 @@ class ContourAnalyzerRANSAC(ContourAnalyzer):
     def extract_lines(self, contour, k):
         """extract lines from contour"""
         # interpolate points
-#         contour = interpolate_points(contour, 2)
-#         Plotter.plot_points(GlobalVariable.original_image, contour,
+#       contour = interpolate_points(contour, 2)
+#       Plotter.plot_points(GlobalVariable.original_image, contour,
 #                             'points after interpolate')
         # assign points to different lines
         idx = self.get_idx_from_contours_ransac(contour, k)
-        print idx
+        print 'best idx', idx
         # prepare points for line fitting
         contour, idx = self.remove_unused_points(contour, idx)
 #       idx = self.adjust_indexes(idx)
@@ -155,9 +155,10 @@ class ContourAnalyzerRANSAC(ContourAnalyzer):
             if inliner_rate > best_rate:
                 best_rate = inliner_rate
                 best_idx = inliner_idx
+                info('best_rate updated to:', best_rate, '\n')
         return best_idx
 
-    def one_pass_ransac(self, contour, d, k=4):
+    def one_pass_ransac(self, contour, d, k):
         n = len(contour)  # points left
         inliner_idx = [-1 for _ in xrange(n)]  # -1 means not included yet
         for _ in xrange(k):
@@ -191,7 +192,7 @@ class ContourAnalyzerRANSAC(ContourAnalyzer):
                                1, p, n, a, delta)
         # delete backward
         self.set_index_by_step(contour, inliner_idx, idx,
-                               -1, p-1, n, a, delta)
+                               -1, p - 1, n, a, delta)
         return inliner_idx
 
     # Add Test
@@ -211,7 +212,6 @@ class ContourAnalyzerRANSAC(ContourAnalyzer):
                                       dtype=np.float32),
                                       cv2.cv.CV_DIST_L2,
                                       0, 0.01, 0.01)
-     
         vx = line[0]
         vy = line[1]
         n = np.asarray([vx, vy])
@@ -224,19 +224,19 @@ class ContourAnalyzerRANSAC(ContourAnalyzer):
 
 class ContourAnalyzerClustering(ContourAnalyzer):
 
-    def extract_lines(self, contour):
+    def extract_lines(self, contour, n):
         """extract lines from contour"""
         # get convex contour of a contour
         contour = np.squeeze(cv2.convexHull(contour))
         # assign points to different lines
-        idx = self.get_idx_from_contours_kmeans(contour)
+        idx = self.get_idx_from_contours_kmeans(contour, n)
         # prepare points for line fitting
         idx = self.adjust_indexes(idx)
         # fit points to line
         lines = self.fit_lines_from_points(contour, idx)
         return lines
 
-    def get_idx_from_contours_kmeans(self, contour, n=4):
+    def get_idx_from_contours_kmeans(self, contour, n):
         '''
         @param contour: contour in points, assumed to be convex
         @param n: number of sides
@@ -306,14 +306,14 @@ class CornerExtractor(object):
     def __init__(self, image):
         self.image = copy.deepcopy(image)
 
-    def extract(self, n=4, convex=True):
-        return  self.get_bounding_polygon_vertices(self.image, convex)
+    def extract(self, n, convex=True):
+        return  self.get_bounding_polygon_vertices(self.image, convex, n)
 
-    def get_bounding_polygon_vertices(self, image, convex):
+    def get_bounding_polygon_vertices(self, image, convex, n):
         from research.util import Plotter
 
-        lines = self.get_lines(image, convex)
-        Plotter.plot_lines(image, lines)
+        lines = self.get_lines(image, convex, n)
+        Plotter.plot_lines(image, lines, 'final results')
         corners = self.get_vertices(lines)
         return corners
 
@@ -332,8 +332,9 @@ class CornerExtractor(object):
         # get contour
         contours, _ = cv2.findContours(copy.deepcopy(bw_img),
                                       cv2.RETR_EXTERNAL,
-                                      cv2.CHAIN_APPROX_TC89_L1)
+                                      cv2.CHAIN_APPROX_NONE)
 #                                       cv2.CHAIN_APPROX_SIMPLE)
+#                                       cv2.CHAIN_APPROX_TC89_L1)
         # get the contour with the most points
         contour = reduce(lambda x, y: x if len(x) > len(y) else y,
                          contours, [])
@@ -350,7 +351,7 @@ class CornerExtractor(object):
         Plotter.plot_contours(bw_img, [contour], 'contour after squeezing')
         return contour
 
-    def get_lines(self, image, convex):
+    def get_lines(self, image, convex, n):
         '''
         @summary: extract boundary lines of polygon from image
         @param image: input image with polygon
@@ -364,10 +365,9 @@ class CornerExtractor(object):
             analyzer = ContourAnalyzerClustering()
         else:
             analyzer = ContourAnalyzerRANSAC()
-        lines = analyzer.extract_lines(contour)
+        lines = analyzer.extract_lines(contour, n)
         Plotter.plot_lines(image, lines)
         return lines
-
 
     def get_vertices(self, lines):
         """要求直线是首尾相接的，直接计算相邻直线的交点得到顶点"""
@@ -406,6 +406,7 @@ class CornerExtractor(object):
         a = np.array([[l[1], -l[0]], [r[1], -r[0]]])
         b = np.array([[l[2] * l[1] - l[3] * l[0]],
                       [r[2] * r[1] - r[3] * r[0]]])
+        # TODO: 可能出现Singular Matrix: raise LinAlgError, 'Singular matrix'
         point = np.linalg.solve(a, b)
 
         return point
