@@ -12,6 +12,11 @@ import cv2
 import numpy as np
 
 
+def info(*message, **dict_args):
+    for e in message:
+        print e,
+
+
 def add_noise(x, y):
     noise = np.random.normal(0, 2, 2)
     x = x + noise[0]
