@@ -108,7 +108,7 @@ class ContourAnalyzerRANSAC(ContourAnalyzer):
         list_of_remove = []
         idx_new = []
         for k, v in enumerate(idx):
-            if v == -1:
+            if v < 0:  # remove -1 and -2
                 list_of_remove.append(k)
             else:
                 idx_new.append(v)
@@ -123,7 +123,8 @@ class ContourAnalyzerRANSAC(ContourAnalyzer):
 #                             'points after interpolate')
         # assign points to different lines
         idx = self.get_idx_from_contours_ransac(contour, k)
-        print 'best idx', idx
+        info('best idx', idx, '\n')
+        info('idx count', len(idx), '\n')
         # prepare points for line fitting
         contour, idx = self.remove_unused_points(contour, idx)
 #       idx = self.adjust_indexes(idx)
@@ -136,7 +137,7 @@ class ContourAnalyzerRANSAC(ContourAnalyzer):
         n = len(inliner_idx)
         inliner = 0
         for i in inliner_idx:
-            inliner = inliner + 1 if i != -1 else inliner
+            inliner = inliner + 1 if i >= 0 else inliner
         return inliner / n
 
     # TODO: determine N
@@ -179,7 +180,7 @@ class ContourAnalyzerRANSAC(ContourAnalyzer):
                 if inliner_idx[q] == -1:
                     inliner_idx[q] = idx
                 else:  # remove index in common region
-                    inliner_idx[q] = -1
+                    inliner_idx[q] = -2  # DO NOT USE -1
             else:
                 break
             p = p + step
