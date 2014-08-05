@@ -51,15 +51,21 @@ def perspectvie_trans_demo():
 
 
 def ransac_corner_extraction_demo(path, n, convex):
+    from research.util import Plotter
     img = cv2.imread(path)
     GlobalVariable.original_image = img
     extractor = CornerExtractor(img)
-    extractor.extract(n, convex)
+    vertices = extractor.extract(n, convex)
+    print vertices
+    Plotter.plot_points(GlobalVariable.original_image,
+                        vertices, 'final points')
 
+# TODO: 更改画点的颜色和大小
+# TODO：求最近点的算法有问题
 if __name__ == '__main__':
     print 'Hello'
     logging.error("Good Start")
-    # perspectvie_trans_demo()
+#     perspectvie_trans_demo()
 #     ransac_corner_extraction_demo('img/flag.jpg', 7, False)
 #     ransac_corner_extraction_demo('img/rect.jpg', 4, False)
     ransac_corner_extraction_demo('img/array.jpg', 4, False)
