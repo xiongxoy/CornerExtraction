@@ -50,14 +50,16 @@ def perspectvie_trans_demo():
     cv2.destroyAllWindows()
 
 
-def ransac_corner_extraction_demo():
-    img = cv2.imread('img/flag.jpg')
+def ransac_corner_extraction_demo(path, n, convex):
+    img = cv2.imread(path)
     GlobalVariable.original_image = img
     extractor = CornerExtractor(img)
-    extractor.extract(7, False)
+    extractor.extract(n, convex)
 
 if __name__ == '__main__':
     print 'Hello'
     logging.error("Good Start")
     # perspectvie_trans_demo()
-    ransac_corner_extraction_demo()
+#     ransac_corner_extraction_demo('img/flag.jpg', 7, False)
+#     ransac_corner_extraction_demo('img/rect.jpg', 4, False)
+    ransac_corner_extraction_demo('img/array.jpg', 4, False)

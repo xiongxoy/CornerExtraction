@@ -196,11 +196,17 @@ class ContourAnalyzerRANSAC(ContourAnalyzer):
                                -1, p - 1, n, a, delta)
         return inliner_idx
 
-    # Add Test
     def delete_one_edge(self, contour, inliner_idx, d, p):
+        '''
+        从contour中删除和第p个未被分配的点在同一条直线上的点，点到直线的最大距离为d
+        @param contour: 轮廓
+        @param inliner_idx: 当前点已经完成的分配
+        @param d: 最大偏差
+        @param p: 中心点的位置
+        '''
         assert isinstance(contour, np.ndarray)
         counter = 0
-        center = -1
+        center = 0  # when the contour is shorter than p, center will be 0
         for k, v in enumerate(inliner_idx):
             counter = counter + 1 if v == -1 else counter
             if counter == p:
@@ -208,11 +214,15 @@ class ContourAnalyzerRANSAC(ContourAnalyzer):
                 break
         # TODO: determine Region of Support (ROS)
         points = get_elements_in_window(contour, center, 2)
-        # get line in for mat (vx, vy, x0, y0)
+        # get line in format (vx, vy, x0, y0)
         line = cv2.fitLine(np.asarray(points,
                                       dtype=np.float32),
                                       cv2.cv.CV_DIST_L2,
                                       0, 0.01, 0.01)
+#===============================================================================
+        print 'fitted line is', line
+        Plotter.plot_lines(GlobalVariable.original_image, [line], 'line fitted')
+#===============================================================================
         vx = line[0]
         vy = line[1]
         n = np.asarray([vx, vy])
@@ -398,9 +408,10 @@ class CornerExtractor(object):
 
     def get_intersection_point(self, l, r):
         '''
+        get the intersection of l and r by solving linear equation
+
         @param l: line in format (vx, vy, x0, y0)
         @param r: line in format (vx, vy, x0, y0)
-        @summary: get the intersection of l and r by solving linear equation
         '''
         l = l.flatten()
         r = r.flatten()

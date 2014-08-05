@@ -64,8 +64,14 @@ def line_noisy(x0, y0, x1, y1):
 # TODO: Add Test
 # http://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
 def distance_from_point_to_line(n, a, point):
+    '''
+    计算从point到方向向量为n，通过a点的直线的距离
+    @param n:
+    @param a:
+    @param point:
+    '''
     n = n / np.linalg.norm(n)
-    dist_vec = (a - point) - ((a - point) * n) * n
+    dist_vec = (a - point) - (np.inner((a - point), n)) * n
     return np.linalg.norm(dist_vec)
 
 
