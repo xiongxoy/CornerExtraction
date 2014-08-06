@@ -9,7 +9,8 @@ import unittest
 import numpy as np
 
 from research.util import line, distance_from_point_to_line, Plotter
-from research.corner.corner_extraction import ContourAnalyzerRANSAC
+from research.corner.corner_extraction import ContourAnalyzerRANSAC,\
+    CornerExtractor
 from research.corner.global_variable import GlobalVariable
 
 
@@ -89,6 +90,7 @@ class Test(unittest.TestCase):
         delta = second / 10
         self.assertAlmostEqual(first, second, delta=delta)
 
+    @unittest.skip('')
     def test_delete_one_edge_2(self):
         '''
         在实验的时候效果不好，怀疑是删除斜线的时候，有问题
@@ -135,6 +137,19 @@ class Test(unittest.TestCase):
                                                          inliner_idx, 3, n, a)
         inliner_idx = filter(lambda x: x != -1, inliner_idx)
         self.assertEqual(len(inliner_idx), len(points) / 2)
+
+    def test_change_points_to_nearest(self):
+        '''
+        测试将点替换成contour与其最邻近的算法
+        @note: 测试通过
+        '''
+        extractor = CornerExtractor(None)
+        point_set = line(0, 0, 100, 100)
+        points = [[1, 1], [50, 50], [0, 100]]
+        actual = extractor.change_points_to_nearest(point_set, points)
+        expteced = [[1, 1], [50, 50], [50, 50]]
+        print actual, expteced
+        np.testing.assert_array_almost_equal(actual, expteced)
 
     @unittest.skip('')
     def test_skip(self):

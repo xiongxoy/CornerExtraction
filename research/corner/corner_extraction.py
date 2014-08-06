@@ -312,7 +312,11 @@ class CornerExtractor(object):
         self.image = copy.deepcopy(image)
 
     def change_points_to_nearest(self, contour, points):
-        return points
+        from research.util import Plotter
+        Plotter.plot_points(GlobalVariable.original_image, contour,
+                            'Points of original')
+        contour = np.squeeze(contour)
+        points = np.squeeze(points)
         result = []
         for p1 in points:
             p3 = min(contour,

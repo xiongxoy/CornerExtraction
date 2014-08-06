@@ -62,7 +62,7 @@ def ransac_corner_extraction_demo(path, n, convex):
     Plotter.plot_points(GlobalVariable.original_image,
                         vertices, 'final points')
 
-# TODO：求最近点的算法有问题
+#TODO: 求最近点的算法有问题
 if __name__ == '__main__':
     print 'Hello'
     logging.error("Good Start")
