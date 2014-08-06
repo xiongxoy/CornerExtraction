@@ -61,7 +61,6 @@ def line_noisy(x0, y0, x1, y1):
     return points
 
 
-# TODO: Add Test
 # http://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
 def distance_from_point_to_line(n, a, point):
     '''

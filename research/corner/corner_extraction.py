@@ -166,8 +166,6 @@ class ContourAnalyzerRANSAC(ContourAnalyzer):
             n = len(filter(lambda x: x == -1, inliner_idx))
         return inliner_idx
 
-    # TODO: implement delete one edge
-    # TODO: Add Test
     def set_index_by_step(self, contour, inliner_idx, idx,
                           step, p, n, a, delta):
         length = len(contour)
