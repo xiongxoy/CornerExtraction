@@ -3,7 +3,7 @@
 '''
 Created on 2014-7-2
 
-@author: zx
+@author:  Zhou Xiong
 '''
 import cv2
 import logging
@@ -11,6 +11,7 @@ import copy
 
 from research.corner.corner_extraction import get_sub_image, CornerExtractor
 from research.corner.global_variable import GlobalVariable
+from research.util import info
 
 
 def perspectvie_trans_demo():
@@ -58,16 +59,16 @@ def ransac_corner_extraction_demo(path, n, convex):
     GlobalVariable.original_image = img
     extractor = CornerExtractor(img)
     vertices = extractor.extract(n, convex)
-    print vertices
+    info(vertices)
     Plotter.plot_points(GlobalVariable.original_image,
                         vertices, 'final points')
 
 #TODO: 求最近点的算法有问题
 if __name__ == '__main__':
-    print 'Hello'
-    logging.error("Good Start")
+    info('Hello')
+    info("Good Start")
 #     perspectvie_trans_demo()
-#     ransac_corner_extraction_demo('img/flag.jpg', 7, False)
+    ransac_corner_extraction_demo('img/flag.jpg', 7, False)
 #     ransac_corner_extraction_demo('img/rect.jpg', 4, False)
-    ransac_corner_extraction_demo('img/array.jpg', 4, False)
-    print 'Bye'
+#     ransac_corner_extraction_demo('img/array.jpg', 4, False)
+    info('Bye')
