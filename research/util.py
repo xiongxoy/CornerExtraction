@@ -151,13 +151,17 @@ class Plotter(object):
 
     @staticmethod
     def plot_points(image, points, title='points'):
-        color = (255, 255, 0)
+        color = (0, 0, 255)
         tmp = copy.copy(image)
-        # circle require points to be int type
+        try:
+            tmp = cv2.cvtColor(tmp, cv2.COLOR_GRAY2BGR)
+        except cv2.error:
+            pass
+        #  circle require points to be int type
         points = np.asarray(points, dtype=np.int)
         for i in xrange(len(points)):
             p = points[i]
-            cv2.circle(tmp, (p[0], p[1]), 2, color)
+            cv2.circle(tmp, (p[0], p[1]), 2, color, 2)
             cv2.imshow(title, tmp)
         cv2.waitKey(0)
         cv2.destroyWindow(title)

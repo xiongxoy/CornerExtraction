@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 '''
 Created on 2014-7-2
 
@@ -60,7 +62,6 @@ def ransac_corner_extraction_demo(path, n, convex):
     Plotter.plot_points(GlobalVariable.original_image,
                         vertices, 'final points')
 
-# TODO: 更改画点的颜色和大小
 # TODO：求最近点的算法有问题
 if __name__ == '__main__':
     print 'Hello'
@@ -69,3 +70,4 @@ if __name__ == '__main__':
 #     ransac_corner_extraction_demo('img/flag.jpg', 7, False)
 #     ransac_corner_extraction_demo('img/rect.jpg', 4, False)
     ransac_corner_extraction_demo('img/array.jpg', 4, False)
+    print 'Bye'
