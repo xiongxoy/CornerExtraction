@@ -1,4 +1,4 @@
-FILENAME = icip_paper
+FILENAME = corner_extraction_paper
 PS_FILE = $(FILENAME).ps
 PDF_FILE = $(FILENAME).pdf
 
@@ -14,8 +14,7 @@ COMPRESS_DIRS = . Tables Figures
 COMPRESS = gzip -q
 UNCOMPRESS = gunzip
 
-all: main
-
+all: pdf
 
 main:
 	latex main
@@ -32,6 +31,9 @@ pdf: main
 		-dPDFSETTINGS=/prepress \
 		-dCompatibilityLevel=1.7 \
 		$(PS_FILE) $(PDF_FILE)
+	rm -f $(LATEX_FILES)
+	open $(PDF_FILE)
+
 
 clean:
 	@for i in $(COMPRESS_DIRS) ; \
