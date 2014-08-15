@@ -12,6 +12,16 @@ import cv2
 import numpy as np
 
 
+#TODO: 实现freeman chaincode的绘画
+def plot_chian_code(code, n=1):
+    '''
+    根据制定的大小，将freeman chain code转化为可视化的图形
+    @param code: 图形的freeman chain code
+    @param n: 每次的步长
+    '''
+    pass
+
+
 def info(*message, **dict_args):
     for e in message:
         print e,
