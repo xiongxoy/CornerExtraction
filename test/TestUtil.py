@@ -5,7 +5,9 @@ Created on 2014-8-16
 '''
 import unittest
 import numpy as np
-from research.util import interpolate_points, get_elements_in_window
+from research.util import interpolate_points, get_elements_in_window,\
+    convert_chiancode, Plotter
+import cv2
 
 
 class Test(unittest.TestCase):
@@ -59,6 +61,30 @@ class Test(unittest.TestCase):
         ret_indexes = get_elements_in_window(indexes, 18, 1)
         expected_indexes = np.array([2, 2, 1],  dtype=np.float32)
         self.assertItemsEqual(ret_indexes,  expected_indexes)
+
+    def test_plot_chain_code(self):
+        code = '0007776555444333100222'
+        points = convert_chiancode(code, 20)
+        img = np.zeros((500, 500), dtype=np.uint8)
+        Plotter.plot_points(img, points)
+
+    @unittest.skip('')
+    def test_cv2_gray_to_rgb(self):
+        img_gray = np.zeros((100, 100), dtype=np.uint8)
+        img_bgr = cv2.cvtColor(img_gray, cv2.COLOR_GRAY2BGR)
+        color = (0, 0, 255)
+        cv2.circle(img_bgr, (50, 50), 10, color, 2)
+        cv2.imshow('Color Image', img_bgr)
+        cv2.waitKey(0)
+
+    @unittest.skip('')
+    def test_cv2_rgb_to_gray(self):
+        img_bgr = np.zeros((100, 100, 3), dtype=np.uint8)
+        img_gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+        img_gray[50, 50:] = 255
+        cv2.circle(img_gray, (50, 50), 10, 255, 2)
+        cv2.imshow('Gray Image', img_gray)
+        cv2.waitKey(0)
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

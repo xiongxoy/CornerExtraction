@@ -11,15 +11,28 @@ import logging
 import cv2
 import numpy as np
 
+freeman_code = np.asarray([[1, 0], [1, -1], [0, -1], [-1, -1],
+                           [-1, 0], [-1, 1], [0, 1], [1, 1]], np.float)
 
-#TODO: 实现freeman chaincode的绘画
-def plot_chian_code(code, n=1):
+
+#TODO: 实现freeman chain code的可视化
+def convert_chiancode(code, n=1):
     '''
     根据制定的大小，将freeman chain code转化为可视化的图形
     @param code: 图形的freeman chain code
     @param n: 每次的步长
+    @return: contour represented by code
     '''
-    pass
+    size = 300
+    point = np.array([size / 2, size / 2], dtype=np.float)
+    points = []
+    tmp = point
+    points.append(tmp)
+    for c in code:
+        for _ in xrange(n):
+            tmp = tmp + freeman_code[int(c)]
+            points.append(tmp)
+    return points
 
 
 def info(*message, **dict_args):
@@ -163,14 +176,15 @@ class Plotter(object):
         tmp = copy.copy(image)
         try:
             tmp = cv2.cvtColor(tmp, cv2.COLOR_GRAY2BGR)
-        except cv2.error:
+        except cv2.error as e:
+            print 'error is: ', e
             pass
         #  circle require points to be int type
-        points = np.asarray(points, dtype=np.int)
+        points = np.array(points, dtype=np.int)
         for i in xrange(len(points)):
             p = points[i]
             cv2.circle(tmp, (p[0], p[1]), 2, color, 2)
-            cv2.imshow(title, tmp)
+        cv2.imshow(title, tmp)
         cv2.waitKey(0)
         cv2.destroyWindow(title)
 
