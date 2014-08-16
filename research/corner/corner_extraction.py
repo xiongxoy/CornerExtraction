@@ -18,6 +18,8 @@ class ContourAnalyzer(object):
         '''
         @param points: list of points
         @param idx:    index of which line each point belongs to
+
+        @return: lines computed from points according to idx
         '''
         # store line results
         lines = []
@@ -37,22 +39,6 @@ class ContourAnalyzer(object):
             lines.append(line)
         return lines
 
-    def get_indexes_in_window(self, indexes, i, w):
-        assert isinstance(indexes, list)
-        n = len(indexes)
-        indexes_ret = []
-        if i - w >= 0 and i + w + 1 <= n:
-            return indexes[i - w:i + w + 1]
-        elif i - w >= 0 and i + w + 1 > n:
-            indexes_ret = indexes[i - w:n]
-            # remain 2*w+1-(n-i+w)
-            indexes_ret.extend(indexes[0:(2 * w + 1 - (n - i + w))])
-        elif i - w < 0 and i + w + 1 <= n:
-            indexes_ret = indexes[0:i + w + 1]
-            indexes_ret.extend(indexes[n - (w - i):n])
-        assert len(indexes_ret) == 2 * w + 1
-        return indexes_ret
-
     def filter_indexes(self, indexes, w=1):
         '''
         使用类似中值滤波的技术，对轮廓进行去噪
@@ -64,13 +50,17 @@ class ContourAnalyzer(object):
         n = len(indexes)
         for i in xrange(n):
             indexes_ret.append(
-                np.median(self.get_indexes_in_window(indexes, i, w))
+                np.median(get_elements_in_window(indexes, i, w))
             )
         return indexes_ret
 
     def rename_indexes(self, indexes):
-        '''@note 怎么处理具体应用和函数之间的矛盾呢？'''
-        '''可以假设最开始的一个index是属于左上角的点么, 额额。'''
+        '''
+        将indexes中的元素重命名，
+        例如[2, 2, 3, 3, 1, 2]会重命名为[0, 0, 1, 1, 2, 0]
+        @param indexes:
+        @return: renamed indexes
+        '''
         assert isinstance(indexes, list)
         name_map = {}
         c = 0

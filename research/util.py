@@ -86,7 +86,6 @@ def distance_from_point_to_line(n, a, point):
 
 def get_elements_in_window(li, i, w):
     li = list(li)
-    assert isinstance(li, list)
     n = len(li)
     elements_ret = []
     if i - w >= 0 and i + w + 1 <= n:
