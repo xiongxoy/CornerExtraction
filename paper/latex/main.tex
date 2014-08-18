@@ -150,37 +150,66 @@ The main procedure of our algorithm is shown
   \SetKwInOut{Input}{Input}
   \SetKwInOut{Output}{Output}
   \SetKwInOut{Task}{Task}
-  \SetKwInOut{Main}{Main procedure}
   \Task{Extract vertices of a convex polygonal contour}
   \Input{The contour $\mathbf{C}$, number of vertices $n$}
   \Output{Coordinates of $n$ vertices}
   \BlankLine
-  $hull$ = \FindConvexHull{$\mathbf{C}$} \;
-  $l$ = number of points in $hull$ \;
-  $vectors$ = empty list \;
+  $hull \leftarrow$  \FindConvexHull{$\mathbf{C}$} \;
+  $l \leftarrow$  number of points in $hull$ \;
+  $vectors \leftarrow $  empty list \;
   \For{$i\leftarrow 1$ \KwTo $l$}{
     \tcp*[h]{compute direction vector} \;
-    $v = \mathbf{C}[(i+1)\mod l] - \mathbf{C}[i] $  \;
+    $v \leftarrow \mathbf{C}[(i+1)\mod l] - \mathbf{C}[i] $  \;
     \tcp*[h]{normalize to unit vector} \;
-    $v$ =  $v$ $/$ $\Vert$ $v$ $\Vert$ \;
+    $v \leftarrow$   $v$ $/$ $\Vert$ $v$ $\Vert$ \;
     $vectors$.add(v) \;
   }
-  $indexes$ = \Kmeans{$vectors$, $n$} \;
+  $indexes \leftarrow$ \Kmeans{$vectors$, $n$} \;
   \emph{seperate points in $hull$ into $n$ sets by $indexes$ } \;
-  $lines$ = fit the points in each set to a line \;
-  $vertices$ = the intersection of adjacent lines \;
+  $lines \leftarrow$ fit the points in each set to a line \;
+  $vertices \leftarrow$ the intersection of adjacent lines \;
   \Return $vertices$
   \caption{Vertex Extraction for Convex Polygon}
   \label{algo_convex_polygon}
 \end{algorithm}
 
 \begin{algorithm}[h]
+  \small
+  \SetKwInOut{Input}{Input}
+  \SetKwInOut{Output}{Output}
+  \SetKwInOut{Task}{Task}
+  \SetKwFunction{FitModel}{Fit-Model}
   \Task{Extract vertices of a general polygonal contour}
   \Input{The contour $\mathbf{C}$, number of vertices $n$}
   \Output{Coordinates of $n$ vertices}
   \BlankLine
-  $inliner\_rate$ = 0 \;
+  $inlinerRate \leftarrow -1$ \;
+  $lines \leftarrow$ empty list \;
+  $N \leftarrow 100 $\;
+  $d \leftarrow 2.5 $\;
+  \tcp*[h]{main procedure of RANSAC} \;
+  \For{$i\leftarrow 1$ \KwTo $N$}{
+    \tcp*[h]{one pass for model fitting} \;
+    $linesNew, inlinerRateNew \leftarrow$ \FitModel{ $\mathbf{C}$, $n$ }\;
+    \If{$inlinerRateNew > inlinerRate$} {
+      $inlinerRate \leftarrow inlinerRateNew$ \;
+      $lines \leftarrow linesNew$ \;
+    }
+  }
+  $lines \leftarrow$ fit the points in each set to a line \;
+  $vertices \leftarrow$ the intersection of adjacent lines \;
+  \Return $vertices$
   \caption{Vertex Extraction for General Polygon}\label{algo_nonconvex_polygon}
+\end{algorithm}
+
+\begin{algorithm}[h]
+  \small
+  \SetKwInOut{Input}{Input}
+  \SetKwInOut{Output}{Output}
+  \SetKwInOut{Task}{Task}
+  \Task{Fit contour with lines}
+  \Input{The contour $\mathbf{C}$, number of lines $n$}
+
 \end{algorithm}
 
 \IncMargin{1em}

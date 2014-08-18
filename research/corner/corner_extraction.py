@@ -134,7 +134,7 @@ class ContourAnalyzerRANSAC(ContourAnalyzer):
 
         best_idx = []
         best_rate = -1
-        for _ in xrange(N):
+        for i in xrange(N):
             # do RANSAC for one pass
             try:
                 inliner_idx = self.one_pass_ransac(contour, d, k)
@@ -144,6 +144,7 @@ class ContourAnalyzerRANSAC(ContourAnalyzer):
             if inliner_rate > best_rate:
                 best_rate = inliner_rate
                 best_idx = inliner_idx
+                info('in round ', i, '\n')
                 info('best_rate updated to:', best_rate, '\n')
         return best_idx
 
