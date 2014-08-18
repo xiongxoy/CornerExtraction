@@ -13,8 +13,12 @@ class ImageTransformer:
         self.image = copy.deepcopy(image)
 
     def align_points(self, points_original):
+        '''
+        调整点的位置，取离远点最近的点作为第一个点
+        @return: 调整之后的点的list
+        '''
         p, _ = min(enumerate(points_original),
-                   key=lambda x: np.linalg.norm(x[1]))
+                   key=lambda (k, v): np.linalg.norm(v))
         n = len(points_original)
         points_original_new = [points_original[(i + p) % n] for i in xrange(n)]
         return points_original_new

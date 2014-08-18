@@ -1,10 +1,10 @@
-% Template for ICIP-2014 paper; to be used with:
+%Template for ICIP-2014 paper; to be used with:
 %          spconf.sty  - ICASSP/ICIP LaTeX style file, and
 %          IEEEbib.bst - IEEE bibliography style file.
 % --------------------------------------------------------------------------
 \documentclass{article}
 \usepackage{spconf,amsmath,graphicx}
-\usepackage[ruled]{algorithm2e}
+\usepackage[ruled, linesnumbered]{algorithm2e}
 
 
 % Example definitions.
@@ -142,15 +142,19 @@ for detecting critical point in digital curves, but due to the possible noise in
 a completely local method wouldn't be feasible for vertex extraction.
 
 The main procedure of our algorithm is shown
+
 \begin{algorithm}[h]  % h是什么意思？以前查过，现在忘了
   \small              % small不知是什么意思
   \SetKwFunction{FindConvexHull}{FindConvexHull}
   \SetKwFunction{Kmeans}{K-Means-Clustering}
-  \noindent{\bf{Task:}} Extract vertices of a polygon contour. \\
-  \noindent{\bf{Input:}} The contour $\mathbf{C}$, number of vertices $n$. \\
-  \noindent{\bf{Output:}} Coordinates of the $n$ vertices. \\
+  \SetKwInOut{Input}{Input}
+  \SetKwInOut{Output}{Output}
+  \SetKwInOut{Task}{Task}
+  \SetKwInOut{Main}{Main procedure}
+  \Task{Extract vertices of a convex polygonal contour}
+  \Input{The contour $\mathbf{C}$, number of vertices $n$}
+  \Output{Coordinates of $n$ vertices}
   \BlankLine
-  \noindent{\bf{Main procedure:}} \\
   $hull$ = \FindConvexHull{$\mathbf{C}$} \;
   $l$ = number of points in $hull$ \;
   $vectors$ = empty list \;
@@ -161,7 +165,22 @@ The main procedure of our algorithm is shown
     $v$ =  $v$ $/$ $\Vert$ $v$ $\Vert$ \;
     $vectors$.add(v) \;
   }
-  \Kmeans{$vectors$, $n$} \;
+  $indexes$ = \Kmeans{$vectors$, $n$} \;
+  \emph{seperate points in $hull$ into $n$ sets by $indexes$ } \;
+  $lines$ = fit the points in each set to a line \;
+  $vertices$ = the intersection of adjacent lines \;
+  \Return $vertices$
+  \caption{Vertex Extraction for Convex Polygon}
+  \label{algo_convex_polygon}
+\end{algorithm}
+
+\begin{algorithm}[h]
+  \Task{Extract vertices of a general polygonal contour}
+  \Input{The contour $\mathbf{C}$, number of vertices $n$}
+  \Output{Coordinates of $n$ vertices}
+  \BlankLine
+  $inliner\_rate$ = 0 \;
+  \caption{Vertex Extraction for General Polygon}\label{algo_nonconvex_polygon}
 \end{algorithm}
 
 \IncMargin{1em}
@@ -197,42 +216,6 @@ The main procedure of our algorithm is shown
   }
   \caption{disjoint decomposition}\label{algo_disjdecomp}
 \end{algorithm}\DecMargin{1em}
-
-
-\subsection{Subheadings}
-\label{ssec:subhead}
-
-Subheadings should appear in lower case (initial word capitalized) in
-boldface.  They should start at the left margin on a separate line.
-
-\subsubsection{Sub-subheadings}
-\label{sssec:subsubhead}
-
-Sub-subheadings, as in this paragraph, are discouraged. However, if you
-must use them, they should appear in lower case (initial word
-capitalized) and start at the left margin on a separate line, with paragraph
-text beginning on the following line.  They should be in italics.
-
-\section{PAPER FORMAT}
-\label{sec:print}
-
-Format you paper for US letter, $8.5 \times 11$-inch paper.
-A4 paper is also acceptable, but please leave the extra 0.5 inch (12 mm)
-empty at the BOTTOM of the page and follow the top and left margins as
-specified.  If the last page of your paper is only partially filled, arrange
-the columns so that they are evenly balanced if possible, rather than having
-one long column.
-
-In LaTeX, to start a new column (but not a new page) and help balance the
-last-page column lengths, you can use the command ``$\backslash$pagebreak'' as
-demonstrated on this page (see the LaTeX source below).
-
-\section{PAGE NUMBERING}
-\label{sec:page}
-
-Please do {\bf not} paginate your paper.  Page numbers, session numbers, and
-conference identification will be inserted when the paper is included in the
-proceedings.
 
 \section{ILLUSTRATIONS, GRAPHS, AND PHOTOGRAPHS}
 \label{sec:illust}
