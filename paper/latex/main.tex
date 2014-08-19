@@ -14,7 +14,7 @@
 
 % Title.
 % ------
-\title{Vertex Extraction for Convex and Concave Polygons}
+\title{Vertex Extraction for Convex and Concave Polygons based on Clustering and RANSAC}
 % TODO 进行拼写检查
 %
 % Single address.
@@ -133,15 +133,28 @@ dominat points. Each break point are taken as initial set of dominant points.
 
 We adopt ideas from data clustering and machine vision
 
-\section{Vertex Extraction for Convex Polygon}
-\label{sec:Vertex Extraction for Convex Polygon}
-Given a possibily noisy closed curve of a polygon, we want to get the exact
-coordinates of its vetices. The proposed method is a global method, we take
-all points into consideration at once. Many local methods have been propsed
-for detecting critical point in digital curves, but due to the possible noise in the curve,
-a completely local method wouldn't be feasible for vertex extraction.
+\section{The method}
+\label{sec:The method}
 
-The main procedure of our algorithm is shown
+Given a closed curve of a polygon, we want to get the coordinates of its vetices.
+Beside the efficiency and simplicity, a practical algorithm must be able
+to deal with noisy curves. The vertices of a noisy polygon is a subset of its cirtical points.
+%% 写这里还需要看看Polygonal Approximation的文章，也就是Ciritical Point的Indirect方法。
+Previous methods for cirtical point detection are mainly local methods. But because the vertex of a
+polygon is not a local feature, local method without global post-processing can easily fail on noisy curves.
+
+The proposed method is a global method, all points are taken into consideration at once.
+The main procedure of our algorithm is shown in Algorithm~\ref{algo_convex_polygon}.
+The contour $\mathbf{C}$ consists of consecutive pixels in the sense of 8-way connection. % 看看概念，凭印象写的的
+
+\subsection{Vertex Extraction for Convex Polygon}
+\label{sec:Vertex Extraction for Convex Polygon}
+
+
+
+\subsection{Vertex Extraction for General Polygon}
+\label{sec:Vertex Extraction for General Polygon}
+
 
 \begin{algorithm}[h]  % h是什么意思？以前查过，现在忘了
   \small              % small不知是什么意思
@@ -165,7 +178,7 @@ The main procedure of our algorithm is shown
     $vectors$.add(v) \;
   }
   $indexes \leftarrow$ \Kmeans{$vectors$, $n$} \;
-  \emph{seperate points in $hull$ into $n$ sets by $indexes$ } \;
+  Seperate points in $hull$ into $n$ sets by $indexes$  \;
   $lines \leftarrow$ fit the points in each set to a line \;
   $vertices \leftarrow$ the intersection of adjacent lines \;
   \Return $vertices$
