@@ -176,10 +176,9 @@ class Plotter(object):
         tmp = copy.copy(image)
         try:
             tmp = cv2.cvtColor(tmp, cv2.COLOR_GRAY2BGR)
-        except cv2.error as e:
-            print 'error is: ', e
+        except cv2.error:
             pass
-        #  circle require points to be int type
+        #  cv2.circle requires points to be int type
         points = np.array(points, dtype=np.int)
         for i in xrange(len(points)):
             p = points[i]
