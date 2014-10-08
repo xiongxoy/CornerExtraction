@@ -6,7 +6,6 @@
 \usepackage{spconf,amsmath,graphicx}
 \usepackage[ruled, linesnumbered]{algorithm2e}
 
-
 % Example definitions.
 % --------------------
 \def\x{{\mathbf x}}
@@ -14,13 +13,13 @@
 
 % Title.
 % ------
-\title{Vertex Extraction for Convex and Concave Polygons based on Clustering and RANSAC}
+\title{Robust Vertex Extraction Methods for Convex and Concave Polygons}
 % TODO 进行拼写检查
 %
 % Single address.
 % ---------------
 \name{Zhou Xiong}
-\address{Harbin Institute of Technology\\Computer Science and Engneering\\Harbin, China}
+\address{Harbin Institute of Technology\\Computer Science and Engineering\\Harbin, China}
 
 %
 % For example:
@@ -49,14 +48,14 @@
 %
 \begin{abstract}
 
-Locating the vertices of a polygonal digital contour is an important but seldomly addressed problem.
+Locating the vertices of a polygonal digital contour is an important but seldom addressed problem.
 We propose two fast and robust methods for vertex detection in convex and non-convex polygons.
-The first method is dedecated to convex polygons. We first map each point to the unit circle, then apply
+The first method is dedicated to convex polygons. We first map each point to the unit circle, then apply
 k-means to assign points the corresponding lines, vertices are computed as the intersection of adjacent lines.
 The mapping in the method can preserve the topological order of points, which is a key contribution of our method.
 The second method does not require the polygon to be convex. We use the RANSAC approach to fit the polygon. A polygon
-is modelded as consecutive lines, we iterate several times and choose the model with highest inliner rate. Expriemnts
-on natural and synthetical images are given to show the validity of our approach.
+is modeled as consecutive lines, we iterate several times and choose the model with highest inliner rate. 
+Experiments on natural and synthetical images are given to show the validity of our approach.
 
 \end{abstract}
 %
@@ -66,52 +65,52 @@ on natural and synthetical images are given to show the validity of our approach
 %
 \section{Introduction}
 \label{sec:intro}
-The work on the detection of dominant points started from the research of Attneave who proposed that the local maximum
-curvature points on a curve have a rich information content and are sufficient to characterize this curve have a rich
-rich infomation content and are sufficient to characterize this curve. A method for detection of
-dominant points can lead to a good representation of a planar shape at different resolutions.
+%The work on the detection of dominant points started from the research of Attneave who proposed that the local maximum
+%curvature points on a curve have a rich information content and are sufficient to characterize this curve have a rich
+%rich information content and are sufficient to characterize this curve. A method for detection of
+%dominant points can lead to a good representation of a planar shape at different resolutions.
 
-In addition, a representation of a planar shape based on dominant points has some advantages.
-Firstly, it enables a high data reduction.
-Secondly, this representation concentrates on principal features of the shape, so it is
-efficient for shape matching, feature extraction or decomposition of curve into meanningful parts.
-Therefore, these points have a critical role in curve approximation, shape matching and image matching.
-They also lead to some applications in other domains of machine vision such as vector data compression.
+%In addition, a representation of a planar shape based on dominant points has some advantages.
+%Firstly, it enables a high data reduction.
+%Secondly, this representation concentrates on principal features of the shape, so it is
+%efficient for shape matching, feature extraction or decomposition of curve into meaningful parts.
+%Therefore, these points have a critical role in curve approximation, shape matching and image matching.
+%They also lead to some applications in other domains of machine vision such as vector data compression.
 
-Starting from Attneave's work, there are many existing methods for dominant points detection.
-Concerning this problem, several problems in this topic have been identified: evaluation, number of
-parameters, selection of starting point, multi-scale, working with noisy curves, \dots.
+%Starting from Attneave's work, there are many existing methods for dominant points detection.
+%Concerning this problem, several problems in this topic have been identified: evaluation, number of
+%parameters, selection of starting point, multi-scale, working with noisy curves, \dots.
 
-In general, we can classify these methods into two groups.
-The first one contains direct methods that determine dominant points such as high curvature
-value points by using curvature-based significant measures, or using alternative significant
-measures such as k-cosine, region of support (ROS). Rosenfield and Johnston used cosine of the
-angle between the archs of length k on each side of a point (termed k-cosine) as curvature-based
-significant measure.
-The indirect methods are often based on polygonal approxiamation of the curve,
-the dominant points are deduced after doing this step.
-In these methods, the dominant points are detected as the vertex of approximated polygons.
-In addition, we can divide polygonal approximation methods into three principal approaches:
-sequential approach, split and merge approch, heuristic search one.
-For sequential approach, Ray and Ray determined the longest possible line segement
-with minimum error. Kolesnikov proposed a sub-optimal algorithm for polygon
-approximation of closed curves based on the corresponding optimal dynamic programming
-algorithm for open curves.
-Aoyama used a linear scan to evaluate error condtions, if the conditions are not satisfied,
-a new segment search is started. The problem of this method is that sometimes the nodes
-do not correspond to the corners because a new vector is defined only when the condtions
-are violated.
-For split-and-merge methods, lines are fitted to an intial segmentation of the boundary
-and then the least square error is computed. These methods then iteratively split
-a line if the error is too large and merge two points if the error is too small.
-Heuristic approach is used to reduce the complexity of an optimal algorithm for approximating
-polygon. Genetic algorithm, tabu search, ant colony search, fuzzy ressning are some
-popular techniques approach is simple and fast, but the quality of its result depends on the
-starting point.
-Masood has proposed an efficient method taht does not belong to any of the above groups.
-It is based on break point extraction. A break point is a point of which the chain code
-is different from that of the previous point. Break points are taken as initial set of
-dominat points. Each break point are taken as initial set of dominant points.
+%In general, we can classify these methods into two groups.
+%The first one contains direct methods that determine dominant points such as high curvature
+%value points by using curvature-based significant measures, or using alternative significant
+%measures such as k-cosine, region of support (ROS). Rosenfield and Johnston used cosine of the
+%angle between the archs of length k on each side of a point (termed k-cosine) as curvature-based
+%significant measure.
+%The indirect methods are often based on polygonal approximation of the curve,
+%the dominant points are deduced after doing this step.
+%In these methods, the dominant points are detected as the vertex of approximated polygons.
+%In addition, we can divide polygonal approximation methods into three principal approaches:
+%sequential approach, split and merge approach, heuristic search one.
+%For sequential approach, Ray and Ray determined the longest possible line segment
+%with minimum error. Kolesnikov proposed a sub-optimal algorithm for polygon
+%approximation of closed curves based on the corresponding optimal dynamic programming
+%algorithm for open curves.
+%Aoyama used a linear scan to evaluate error conditions, if the conditions are not satisfied,
+%a new segment search is started. The problem of this method is that sometimes the nodes
+%do not correspond to the corners because a new vector is defined only when the conditions
+%are violated.
+%For split-and-merge methods, lines are fitted to an initial segmentation of the boundary
+%and then the least square error is computed. These methods then iteratively split
+%a line if the error is too large and merge two points if the error is too small.
+%Heuristic approach is used to reduce the complexity of an optimal algorithm for approximating
+%polygon. Genetic algorithm, tabu search, ant colony search, fuzzy ressning are some
+%popular techniques approach is simple and fast, but the quality of its result depends on the
+%starting point.
+%Masood has proposed an efficient method that does not belong to any of the above groups.
+%It is based on break point extraction. A break point is a point of which the chain code
+%is different from that of the previous point. Break points are taken as initial set of
+%dominant points. Each break point are taken as initial set of dominant points.
 
 \subsection{Hough Transform}
 \label{sub:Hough Transform}
@@ -136,20 +135,38 @@ We adopt ideas from data clustering and machine vision
 \section{The method}
 \label{sec:The method}
 
-Given a closed curve of a polygon, we want to get the coordinates of its vetices.
+Given a closed curve of a polygon, we want to get the coordinates of its vertices.
 Beside the efficiency and simplicity, a practical algorithm must be able
-to deal with noisy curves. The vertices of a noisy polygon is a subset of its cirtical points.
-%% 写这里还需要看看Polygonal Approximation的文章，也就是Ciritical Point的Indirect方法。
-Previous methods for cirtical point detection are mainly local methods. But because the vertex of a
+to deal with noisy curves. The vertices of a noisy polygon is a subset of its critical points.
+%% 写这里还需要看看Polygonal Approximation的文章，也就是Critical Point的Indirect方法。
+Previous methods for critical point detection are mainly local methods. But because the vertex of a
 polygon is not a local feature, local method without global post-processing can easily fail on noisy curves.
+The two algorithms prosed in this paper are both global methods. They only take the number of vertices
+as parameter and are robust to noise and outliers in the curve.
 
-The proposed method is a global method, all points are taken into consideration at once.
+In this section we will introduce two algorithms for extracting the vertices of polygon.
+The first algorithm is only viable for convex polygon. Besides its efficiency and robustness,
+this algorithm also gives some theoretical insight into the problem of finding vertices on a convex hull.
+
+The second algorithm can deal with general polygon.
+The algorithm is a direct application of the RANSAC scheme and thus a iterative algorithm.
+By randomly fitting a polygon with lines iteratively, an optimal combination of lines is selected
+as the model for the polygon. This algorithm is less efficient than the first algorithm for convex polygons,
+but it can extract the vertex of concave polygon, which is a challenging task.
+
+
+\subsection{The contour}
+\label{sub:The contour}
+
+Before introducing the algorithms, we will first describe possible types of input.
+We use $\mathbf{C}$ to denote the input contour. $\mathbf{C}$ can be
+should consist of consecutive pixels in the sense of 8-way connection. % 看看概念，凭印象写的的
+
 The main procedure of our algorithm is shown in Algorithm~\ref{algo_convex_polygon}.
-The contour $\mathbf{C}$ consists of consecutive pixels in the sense of 8-way connection. % 看看概念，凭印象写的的
+The proposed method is a global method, all points are taken into consideration at once.
 
 \subsection{Vertex Extraction for Convex Polygon}
 \label{sec:Vertex Extraction for Convex Polygon}
-
 
 
 \subsection{Vertex Extraction for General Polygon}
@@ -212,7 +229,7 @@ The contour $\mathbf{C}$ consists of consecutive pixels in the sense of 8-way co
   $lines \leftarrow$ fit the points in each set to a line \;
   $vertices \leftarrow$ the intersection of adjacent lines \;
   \Return $vertices$
-  \caption{Vertex Extraction for General Polygon}\label{algo_nonconvex_polygon}
+  \caption{Vertex Extraction for General Polygon} \label{algo_nonconvex_polygon}
 \end{algorithm}
 
 \begin{algorithm}[h]
@@ -229,7 +246,7 @@ The contour $\mathbf{C}$ consists of consecutive pixels in the sense of 8-way co
   Set all elements in $index$ to -1 \;
   \For{$i\leftarrow 1$ \KwTo $n$}{
     $p \leftarrow$ randomly choose an integer in [1, k] \;
-    $line \leftarrow$ fit a line arround the $p$th unassgined point \;
+    $line \leftarrow$ fit a line around the $p$th unassigned point \;
     Mark points, in $index$, whose distance from $line$ is smaller than $d$ \;
     $k \leftarrow $ number of -1 in $index$ \;
   }
@@ -238,72 +255,42 @@ The contour $\mathbf{C}$ consists of consecutive pixels in the sense of 8-way co
   \caption{Fit a general polygon with lines}\label{fit_model}
 \end{algorithm}
 
-\IncMargin{1em}
-\begin{algorithm}
-  \small
-  \SetKwData{Left}{left}
-  \SetKwData{This}{this}
-  \SetKwData{Up}{up}
-  \SetKwFunction{Union}{Union}
-  \SetKwFunction{FindCompress}{FindCompress}
-  \SetKwInOut{Input}{input}
-  \SetKwInOut{Output}{output}
-  \Input{A bitmap $Im$ of size $w\times l$}
-  \Output{A partition of the bitmap}
-  \BlankLine
-  \emph{special treatment of the first line}\;
-  \For{$i\leftarrow 2$ \KwTo $l$}{
-    \emph{special treatment of the first element of line $i$}\;
-    \For{$j\leftarrow 2$ \KwTo $w$}{\label{forins}
-      \Left$\leftarrow$ \FindCompress{$Im[i,j-1]$}\;
-      \Up$\leftarrow$ \FindCompress{$Im[i-1,]$}\;
-      \This$\leftarrow$ \FindCompress{$Im[i,j]$}\;
-      \If(\tcp*[h]{O(\Left,\This)==1}){\Left compatible with \This}{\label{lt}
-        \lIf{\Left $<$ \This}{\Union{\Left,\This}}\;
-        \lElse{\Union{\This,\Left}\;}
-      }
-      \If(\tcp*[f]{O(\Up,\This)==1}){\Up compatible with \This}{\label{ut}
-        \lIf{\Up $<$ \This}{\Union{\Up,\This}}\;
-        \tcp{\This is put under \Up to keep tree as flat as possible}\label{cmt}
-        \lElse{\Union{\This,\Up}}\tcp*[r]{\This linked to \Up}\label{lelse}
-} }
-    \lForEach{element $e$ of the line $i$}{\FindCompress{p}}
-  }
-  \caption{disjoint decomposition}\label{algo_disjdecomp}
-\end{algorithm}\DecMargin{1em}
-
 
 % Below is an example of how to insert images. Delete the ``\vspace'' line,
 % uncomment the preceding line ``\centerline...'' and replace ``imageX.ps''
 % with a suitable PostScript file name.
 % -------------------------------------------------------------------------
-\begin{figure}[t]
+%\begin{figure}[t]
 
-\begin{minipage}[b]{1.0\linewidth}
-  \centering
-  \centerline{\includegraphics[width=8.5cm]{Figures/image1}}
-%  \vspace{2.0cm}
-  \centerline{(a) Result 1}\medskip
-\end{minipage}
-%
-\begin{minipage}[b]{.48\linewidth}
-  \centering
-  \centerline{\includegraphics[width=4.0cm]{Figures/image3}}
-%  \vspace{1.5cm}
-  \centerline{(b) Results 3}\medskip
-\end{minipage}
-\hfill
-\begin{minipage}[b]{0.48\linewidth}
-  \centering
-  \centerline{\includegraphics[width=4.0cm]{Figures/image4}}
-%  \vspace{1.5cm}
-  \centerline{(c) Result 4}\medskip
-\end{minipage}
-%
-\caption{Example of placing a figure with experimental results.}
-\label{fig:res}
-%
-\end{figure}
+%\begin{minipage}[b]{1.0\linewidth}
+  %\centering
+  %\centerline{\includegraphics[width=8.5cm]{Figures/image1}}
+%%  \vspace{2.0cm}
+  %\centerline{(a) Result 1}\medskip
+%\end{minipage}
+%%
+%\begin{minipage}[b]{.48\linewidth}
+  %\centering
+  %\centerline{\includegraphics[width=4.0cm]{Figures/image3}}
+%%  \vspace{1.5cm}
+  %\centerline{(b) Results 3}\medskip
+%\end{minipage}
+%\hfill
+%\begin{minipage}[b]{0.48\linewidth}
+  %\centering
+  %\centerline{\includegraphics[width=4.0cm]{Figures/image4}}
+%%  \vspace{1.5cm}
+  %\centerline{(c) Result 4}\medskip
+%\end{minipage}
+%%
+%\caption{Example of placing a figure with experimental results.}
+%\label{fig:res}
+%%
+%\end{figure}
+
+
+\section{Experiments}
+\label{sec:Experiments}
 
 
 % To start a new column (but not a new page) and help balance the last-page
@@ -312,12 +299,8 @@ The contour $\mathbf{C}$ consists of consecutive pixels in the sense of 8-way co
 %\vfill
 %\pagebreak
 
-\section{COPYRIGHT FORMS}
-\label{sec:copyright}
-
-You must include your fully completed, signed IEEE copyright release form when
-form when you submit your paper. We {\bf must} have this form before your paper
-can be published in the proceedings.
+\section{Conclusion}
+\label{sec:Conclusion}
 
 
 % References should be produced using the bibtex program from suitable
@@ -325,6 +308,8 @@ can be published in the proceedings.
 % style file from IEEE produces unsorted bibliography list.
 % -------------------------------------------------------------------------
 \bibliographystyle{IEEEbib}
+\nocite{*}
+
 \bibliography{refs}
 
 \end{document}

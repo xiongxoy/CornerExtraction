@@ -4,3 +4,21 @@ paper/other
 *.pdf
 *.ps
 *.ps
+
+# LaTeX compilation artifacts
+*.aux
+*.bbl
+*.blg
+*.brf
+*.fls
+*.lof
+*.log
+*.lot
+*.nav
+*.out
+*.snm
+*.synctex.gz
+*.thm
+*.toc
+*.vrb
+*.fdb_latexmk

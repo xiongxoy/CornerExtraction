@@ -1,4 +1,4 @@
-FILENAME = corner_extraction_paper
+FILENAME = vertex_extraction_paper
 PS_FILE = $(FILENAME).ps
 PDF_FILE = $(FILENAME).pdf
 
