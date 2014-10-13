@@ -34,6 +34,9 @@ def convert_chiancode(code, n=1):
             points.append(tmp)
     return points
 
+import inspect
+getFuncName = lambda: inspect.stack()[1][3]
+
 
 def info(*message, **dict_args):
     for e in message:
