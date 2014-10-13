@@ -32,22 +32,19 @@ class ImageTransformer:
 
         # extract corners in image
         extractor = CornerExtractor(self.image)
-        points_original = extractor.extract()
+        points_original = extractor.extract(n)
         # get the corresponding target points
         points_mapped = self.get_mapped_points()
         points_original = self.align_points(points_original)
-        Plotter.plot_points(self.image, points_mapped)
-        Plotter.plot_points(self.image, points_original)
-        # convert storage formats of points
-#       points_original = np.vstack(points_original).squeeze()
-#       points_mapped = np.vstack(points_mapped).squeeze()
+        Plotter.plot_points(self.image, points_mapped, "mapped points")
+        Plotter.plot_points(self.image, points_original, "original points")
+        # compute and apply perspective transform
         points_original = np.asarray(points_original,
                                      'float32'
                                     ).reshape((4, 2))
         points_mapped = np.asarray(points_mapped,
                                    'float32'
                                   ).reshape((4, 2))
-        # extract and apply perspective transform
         H = cv2.getPerspectiveTransform(points_original, points_mapped)
         transformed_image = cv2.warpPerspective(self.image, H, (300, 300))
 

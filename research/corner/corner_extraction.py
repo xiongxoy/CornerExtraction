@@ -8,7 +8,7 @@ import cv2  # OpenCV 2
 import numpy as np
 
 from research.util import get_elements_in_window, distance_from_point_to_line,\
-                          info
+                          info, getFuncName
 from research.corner.global_variable import GlobalVariable
 
 
@@ -250,8 +250,9 @@ class ContourAnalyzerClustering(ContourAnalyzer):
         k = np.squeeze(np.vstack(k))
 
         # plot for debug
-        image = np.zeros((300, 300))
-        Plotter.plot_points(image, (k * 100 + 150))
+        image = np.ones((300, 300, 3)) * 255
+        Plotter.plot_points(image, (k * 100 + 150),
+                            getFuncName() + ": plot_points", (0, 0, 0))
 
         # use k-means
         termination_criteria = (cv2.TERM_CRITERIA_EPS, 30, 0.1)
@@ -302,6 +303,7 @@ class CornerExtractor(object):
 
     def change_points_to_nearest(self, contour, points):
         from research.util import Plotter
+        info('Enter: ', getFuncName(), '\n')
         Plotter.plot_points(GlobalVariable.original_image, contour,
                             'Points of original')
         contour = np.squeeze(contour)
@@ -322,7 +324,7 @@ class CornerExtractor(object):
         from research.util import Plotter
 
         lines, contour = self.get_lines(image, convex, n)
-        Plotter.plot_lines(image, lines, 'final results')
+        Plotter.plot_lines(image, lines, getFuncName() + ': ' + 'final results')
         corners = self.get_vertices(lines)
         corners = self.change_points_to_nearest(contour, corners)
         return corners

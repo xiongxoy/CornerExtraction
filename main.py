@@ -34,9 +34,9 @@ def perspectvie_trans_demo():
     # Show image
     cv2.imshow("image", GlobalVariable.display_image)
     # Wait for user input,
-    # the target rectangle should be drawn before hitting carret
+    # the target rectangle should be drawn before hitting caret
     key = cv2.waitKey(0)
-    # if carret is hit
+    # if caret is hit
     if key == ord('\r'):
         # extract target region
         sub_image = get_sub_image(GlobalVariable.original_image,
@@ -66,8 +66,8 @@ def ransac_corner_extraction_demo(path, n, convex):
 if __name__ == '__main__':
     info('Hello')
     info("Good Start")
-#     perspectvie_trans_demo()
-    ransac_corner_extraction_demo('img/flag.jpg', 7, False)
+    perspectvie_trans_demo()
+#     ransac_corner_extraction_demo('img/flag.jpg', 7, False)
 #     ransac_corner_extraction_demo('img/rect.jpg', 4, False)
 #     ransac_corner_extraction_demo('img/array.jpg', 4, False)
     info('Bye')
