@@ -171,8 +171,7 @@ class Plotter(object):
         logging.info("Leave plot_lines")
 
     @staticmethod
-    def plot_points(image, points, title='points'):
-        color = (0, 0, 255)
+    def plot_points(image, points, title='points', color=(0, 0, 255)):
         tmp = copy.copy(image)
         try:
             tmp = cv2.cvtColor(tmp, cv2.COLOR_GRAY2BGR)
